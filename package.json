@@ -1,0 +1,17 @@
+{
+  "name": "vnr202",
+  "version": "2.0.0",
+  "description": "Hệ thống ôn thi & luyện quizz Lịch sử Đảng (VNR202) - Chương 1 & 2",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx serve ."
+  },
+  "keywords": [
+    "vnr202",
+    "lich-su-dang",
+    "quiz",
+    "flashcard",
+    "leitner"
+  ],
+  "license": "MIT"
+}

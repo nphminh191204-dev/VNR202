@@ -1,17 +1,20 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VNR202 - Web Học & Lọc Quizz Lịch Sử Đảng (Chương 1 & 2)</title>
+    <title>VNR202 - Hệ Thống Ôn Thi & Luyện Quizz Lịch Sử Đảng (Chương 1 & 2)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -21,290 +24,457 @@
                         party: {
                             50: '#fef2f2',
                             100: '#fee2e2',
+                            200: '#fecaca',
+                            500: '#ef4444',
                             600: '#dc2626',
                             700: '#b91c1c',
                             800: '#991b1b',
                             900: '#7f1d1d',
+                            950: '#450a0a',
                         }
                     }
                 }
             }
         }
     </script>
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .answer-option { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
-        .answer-option:hover:not(:disabled) { transform: translateY(-1px); }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-    <!-- Toast Notification -->
-    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+<body
+    class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col pb-20 lg:pb-0 transition-colors duration-200">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"
+        class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4 sm:px-0"></div>
 
     <!-- Custom Confirm Modal -->
-    <div id="custom-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
+    <div id="custom-modal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div
+            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
             <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-lg">
+                <div
+                    class="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg">
                     <i class="fa-solid fa-triangle-exclamation"></i>
                 </div>
-                <h3 id="modal-title" class="text-lg font-bold text-slate-900">Xác nhận</h3>
+                <h3 id="modal-title" class="text-lg font-bold text-slate-900 dark:text-white">Xác nhận</h3>
             </div>
-            <p id="modal-message" class="text-slate-600 text-sm mb-6 leading-relaxed"></p>
+            <p id="modal-message" class="text-slate-600 dark:text-slate-300 text-sm mb-6 leading-relaxed"></p>
             <div class="flex justify-end gap-3">
-                <button id="modal-cancel" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 font-medium hover:bg-slate-100 transition">Hủy</button>
-                <button id="modal-confirm" class="px-4 py-2 rounded-xl bg-party-600 text-white font-semibold hover:bg-party-700 transition">Đồng ý</button>
+                <button id="modal-cancel"
+                    class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition">Hủy</button>
+                <button id="modal-confirm"
+                    class="px-4 py-2 rounded-xl bg-party-600 text-white font-semibold hover:bg-party-700 transition">Đồng
+                    ý</button>
             </div>
         </div>
     </div>
 
+    <!-- Mobile Bottom Sheet Question Palette -->
+    <div id="mobile-palette-sheet"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex-col justify-end lg:hidden">
+        <div
+            class="bg-white dark:bg-slate-900 rounded-t-3xl p-5 max-h-[80vh] flex flex-col shadow-2xl border-t border-slate-200 dark:border-slate-800">
+            <div class="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-3"></div>
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-table-cells text-party-600"></i> Bảng chuyển nhanh câu hỏi
+                </h3>
+                <button onclick="toggleMobilePaletteSheet(false)"
+                    class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="mobile-question-palette"
+                class="grid grid-cols-6 sm:grid-cols-8 gap-2 overflow-y-auto custom-scrollbar py-2"></div>
+        </div>
+    </div>
+
     <!-- Top Header -->
-    <header class="bg-gradient-to-r from-party-800 via-party-700 to-amber-600 text-white shadow-lg sticky top-0 z-30">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+    <header class="bg-gradient-to-r from-party-900 via-party-700 to-amber-600 text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-3">
-                <div class="w-11 h-11 rounded-xl bg-amber-400/20 border border-amber-300/40 flex items-center justify-center text-amber-300 text-xl font-black shadow-inner">
+                <div
+                    class="w-11 h-11 rounded-2xl bg-amber-400/20 border border-amber-300/40 flex items-center justify-center text-amber-300 text-xl font-black shadow-inner">
                     <i class="fa-solid fa-star"></i>
                 </div>
                 <div>
-                    <div class="flex items-center gap-2">
-                        <span class="px-2 py-0.5 text-xs font-bold uppercase tracking-wider bg-amber-400 text-slate-950 rounded-md">VNR202</span>
-                        <h1 class="text-lg sm:text-xl font-extrabold tracking-tight">Lịch Sử Đảng Cộng Sản Việt Nam</h1>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="px-2 py-0.5 text-[11px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 rounded-md">VNR202</span>
+                        <h1 class="text-base sm:text-xl font-extrabold tracking-tight">Lịch Sử Đảng Cộng Sản Việt Nam
+                        </h1>
                     </div>
-                    <p class="text-xs text-red-100 mt-0.5">Hệ thống ôn tập & xuất dữ liệu Chương 1 (1930-1945) & Chương 2 (1945-1975)</p>
+                    <p class="text-[11px] sm:text-xs text-red-100 mt-0.5">Ôn tập thông minh Chương 1 (1930-1945) &
+                        Chương 2 (1945-1975) • Tự động vá lỗi dữ liệu</p>
                 </div>
             </div>
 
-            <!-- Status & Quick Actions -->
-            <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
-                <div id="dataset-badge" class="px-3 py-1.5 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 text-xs font-medium flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-amber-300 animate-pulse"></span>
-                    <span id="dataset-status-text">Đang dùng bộ câu hỏi mẫu (50 câu)</span>
+            <!-- Header Actions -->
+            <div class="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+                <div id="dataset-badge"
+                    class="flex px-3 py-1.5 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 text-xs font-medium items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="dataset-status-text">Đang tải dữ liệu...</span>
                 </div>
-                <label for="file-upload-input" class="cursor-pointer px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm shadow-md transition flex items-center gap-2">
-                    <i class="fa-solid fa-file-import"></i>
-                    <span>Nạp file vnr202.js</span>
-                </label>
-                <input id="file-upload-input" type="file" accept=".js,.json,.txt" class="hidden">
+
+                <!-- Dark Mode Toggle -->
+                <button onclick="toggleDarkMode()" id="btn-dark-mode"
+                    class="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center text-amber-200 transition"
+                    title="Chuyển chế độ Sáng / Tối">
+                    <i id="dark-mode-icon" class="fa-solid fa-moon"></i>
+                </button>
             </div>
         </div>
 
         <!-- Navigation Tabs -->
-        <div class="bg-party-900/50 border-t border-white/10">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto no-scrollbar gap-1 sm:gap-2 py-1.5">
-                <button onclick="switchTab('practice')" id="tab-practice" class="nav-tab px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap bg-white text-party-800 shadow-sm">
-                    <i class="fa-solid fa-graduation-cap"></i> Luyện Tập Từng Câu
+        <div class="bg-party-950/60 border-t border-white/10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto no-scrollbar gap-1.5 py-1.5">
+                <button onclick="switchTab('practice')" id="tab-practice"
+                    class="nav-tab px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap bg-white text-party-800 shadow-sm">
+                    <i class="fa-solid fa-graduation-cap"></i> Học & Flashcard
                 </button>
-                <button onclick="switchTab('exam')" id="tab-exam" class="nav-tab px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap text-red-100 hover:bg-white/10">
-                    <i class="fa-solid fa-stopwatch"></i> Thi Thử (Exam Mode)
+                <button onclick="switchTab('exam')" id="tab-exam"
+                    class="nav-tab px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap text-red-100 hover:bg-white/10">
+                    <i class="fa-solid fa-stopwatch"></i> Thi Thử & Phân Tích Lỗi
                 </button>
-                <button onclick="switchTab('bank')" id="tab-bank" class="nav-tab px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap text-red-100 hover:bg-white/10">
-                    <i class="fa-solid fa-magnifying-glass"></i> Tra Cứu Ngân Hàng Câu Hỏi
+                <button onclick="switchTab('bank')" id="tab-bank"
+                    class="nav-tab px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap text-red-100 hover:bg-white/10">
+                    <i class="fa-solid fa-magnifying-glass"></i> Tra Cứu Nhanh
                 </button>
-                <button onclick="switchTab('export')" id="tab-export" class="nav-tab px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap text-red-100 hover:bg-white/10">
-                    <i class="fa-solid fa-file-export"></i> Lọc & Xuất File JS
-                </button>
+                
             </div>
         </div>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5">
 
-        <!-- Banner nhắc nạp file nếu đang ở chế độ Demo -->
-        <div id="upload-dropzone" class="mb-6 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-dashed border-amber-400 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4 transition">
-            <div class="flex items-start sm:items-center gap-3.5">
-                <div class="w-12 h-12 rounded-2xl bg-amber-400/20 text-amber-700 flex items-center justify-center text-2xl shrink-0">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>
+        <!-- ==================== TAB 1: PRACTICE & FLASHCARD MODE ==================== -->
+        <section id="view-practice" class="space-y-5">
+
+            <!-- 6 Historical Sub-Topic Pills (Bám sát Giáo trình) -->
+            <div
+                class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between mb-2">
+                    <span
+                        class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-timeline text-party-600"></i> Lọc nhanh theo 6 Chuyên đề Lịch sử (Giáo
+                        trình BGD&ĐT):
+                    </span>
+                    <span id="subtopic-active-count"
+                        class="text-xs font-bold text-party-600 dark:text-amber-400"></span>
                 </div>
-                <div>
-                    <h2 class="text-sm sm:text-base font-bold text-slate-900">Nạp tệp <code class="px-1.5 py-0.5 bg-amber-200/70 rounded text-amber-900">vnr202.js</code> của bạn để mở khóa toàn bộ 460 câu Chương 1 & 2!</h2>
-                    <p class="text-xs sm:text-sm text-slate-600 mt-0.5">Kéo thả tệp <code class="font-mono">vnr202.js</code> vào khung này hoặc bấm nút chọn tệp. Hệ thống sẽ tự động loại bỏ các câu Chương 3, làm sạch đáp án rỗng và phân loại chuẩn xác Chương 1 & Chương 2.</p>
+                <div id="subtopic-pills" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                    <button onclick="selectSubtopic('all')" data-topic="all"
+                        class="topic-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-party-600 text-white shadow-sm transition">
+                        Tất cả Ch.1 & 2
+                    </button>
+                    <button onclick="selectSubtopic('t1')" data-topic="t1"
+                        class="topic-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-red-50 transition">
+                        1. Trước 1930 & Thành lập Đảng (Cương lĩnh 2/1930)
+                    </button>
+                    <button onclick="selectSubtopic('t2')" data-topic="t2"
+                        class="topic-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-red-50 transition">
+                        2. Cao trào 1930-1935 (Luận cương & Xô viết Nghệ Tĩnh)
+                    </button>
+                    <button onclick="selectSubtopic('t3')" data-topic="t3"
+                        class="topic-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-red-50 transition">
+                        3. Dân chủ 1936-1939 & Giải phóng dân tộc 1939-1945
+                    </button>
+                    <button onclick="selectSubtopic('t4')" data-topic="t4"
+                        class="topic-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-50 transition">
+                        4. Bảo vệ chính quyền 1945-1946 (Hiệp định Sơ bộ)
+                    </button>
+                    <button onclick="selectSubtopic('t5')" data-topic="t5"
+                        class="topic-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-50 transition">
+                        5. Kháng chiến chống Pháp 1946-1954 (Điện Biên Phủ)
+                    </button>
+                    <button onclick="selectSubtopic('t6')" data-topic="t6"
+                        class="topic-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-50 transition">
+                        6. Xây dựng CNXH ở miền Bắc & Chống Mỹ 1954-1975
+                    </button>
                 </div>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
-                <label for="file-upload-input" class="cursor-pointer px-4 py-2.5 rounded-xl bg-party-600 hover:bg-party-700 text-white font-semibold text-xs sm:text-sm shadow transition whitespace-nowrap">
-                    <i class="fa-solid fa-folder-open mr-1.5"></i> Chọn tệp vnr202.js
-                </label>
-            </div>
-        </div>
 
-        <!-- Dashboard Stats Bar -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-            <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm">
-                <div class="text-xs text-slate-500 font-medium">Tổng câu Ch.1 & 2</div>
-                <div class="text-2xl font-extrabold text-slate-900 mt-1" id="stat-total">0</div>
-                <div class="text-[11px] text-slate-400 mt-0.5" id="stat-source-note">Đã lọc bỏ Chương 3</div>
-            </div>
-            <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm">
-                <div class="text-xs text-red-600 font-semibold">Chương 1 (1930-1945)</div>
-                <div class="text-2xl font-extrabold text-party-700 mt-1" id="stat-ch1">0</div>
-                <div class="text-[11px] text-slate-400 mt-0.5"> Thành lập Đảng & CM T8</div>
-            </div>
-            <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm">
-                <div class="text-xs text-amber-600 font-semibold">Chương 2 (1945-1975)</div>
-                <div class="text-2xl font-extrabold text-amber-600 mt-1" id="stat-ch2">0</div>
-                <div class="text-[11px] text-slate-400 mt-0.5">Kháng chiến Pháp & Mỹ</div>
-            </div>
-            <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm">
-                <div class="text-xs text-emerald-600 font-semibold">Đã làm đúng</div>
-                <div class="text-2xl font-extrabold text-emerald-600 mt-1" id="stat-mastered">0</div>
-                <div class="text-[11px] text-slate-400 mt-0.5" id="stat-accuracy">Tỷ lệ: 0%</div>
-            </div>
-            <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm">
-                <div class="text-xs text-rose-600 font-semibold">Câu hay sai</div>
-                <div class="text-2xl font-extrabold text-rose-600 mt-1" id="stat-wrong">0</div>
-                <div class="text-[11px] text-slate-400 mt-0.5">Cần ôn lại kỹ</div>
-            </div>
-            <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm">
-                <div class="text-xs text-yellow-600 font-semibold">Đánh dấu sao</div>
-                <div class="text-2xl font-extrabold text-yellow-500 mt-1" id="stat-starred">0</div>
-                <div class="text-[11px] text-slate-400 mt-0.5">Câu hỏi quan trọng</div>
-            </div>
-        </div>
-
-        <!-- ==================== TAB 1: PRACTICE MODE ==================== -->
-        <section id="view-practice" class="space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                
-                <!-- Left Column: Question Card (8 cols) -->
+                <!-- Left Column: Study Area (8 cols) -->
                 <div class="lg:col-span-8 space-y-4">
-                    <!-- Filter & Controls Bar -->
-                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+
+                    <!-- Smart Control Toolbar -->
+                    <div
+                        class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-3">
                         <div class="flex items-center gap-2 flex-wrap">
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Phạm vi:</span>
-                            <select id="practice-filter" onchange="applyPracticeFilter()" class="text-xs sm:text-sm font-semibold bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-party-600">
-                                <option value="all">Tất cả Chương 1 & 2</option>
-                                <option value="ch1">Chỉ Chương 1 (1920 - 1945)</option>
-                                <option value="ch2">Chỉ Chương 2 (1945 - 1975)</option>
-                                <option value="unanswered">Câu chưa làm</option>
-                                <option value="wrong">Câu đang làm sai</option>
-                                <option value="starred">Câu đánh dấu sao (★)</option>
+                            <select id="practice-filter" onchange="applyPracticeFilter()"
+                                class="text-xs sm:text-sm font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-party-600">
+                                <option value="all">📚 Tất cả câu hỏi (Chương 1 & 2)</option>
+                                <option value="ch1">🚩 Chỉ Chương 1 (1930 - 1945)</option>
+                                <option value="ch2">🛡️ Chỉ Chương 2 (1945 - 1975)</option>
+                                <option value="unanswered">⚪ Câu chưa làm</option>
+                                <option value="bucket-wrong">🔴 Chưa thuộc / Hay sai</option>
+                                <option value="bucket-learning">🟡 Đang nhớ (Đúng 1 lần)</option>
+                                <option value="bucket-mastered">🟢 Đã thuộc làu (≥ 2 lần)</option>
+                                <option value="starred">⭐ Câu đánh dấu sao</option>
                             </select>
+
+                            <!-- Mode Switcher: Quiz vs Flashcard -->
+                            <div
+                                class="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700">
+                                <button onclick="setStudyMode('quiz')" id="mode-btn-quiz"
+                                    class="px-3 py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-900 text-party-700 dark:text-amber-400 shadow-sm transition">
+                                    <i class="fa-solid fa-list-check mr-1"></i> Trắc nghiệm
+                                </button>
+                                <button onclick="setStudyMode('flashcard')" id="mode-btn-flashcard"
+                                    class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 transition">
+                                    <i class="fa-solid fa-clone mr-1"></i> Lật thẻ Flashcard
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <button onclick="toggleShuffleQuestions()" id="btn-shuffle-q" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition flex items-center gap-1.5" title="Xáo trộn thứ tự câu hỏi">
-                                <i class="fa-solid fa-shuffle"></i> Trộn câu
+                        <!-- UX Toggles: Auto-advance, Shuffle Answers, Shuffle Questions -->
+                        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                            <button onclick="toggleAutoAdvance()" id="btn-auto-advance"
+                                class="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5"
+                                title="Tự động chuyển sang câu tiếp theo sau 0.8 giây khi chọn đúng">
+                                <i class="fa-solid fa-forward-fast"></i> <span class="hidden sm:inline">Tự qua
+                                    câu</span>
                             </button>
-                            <button onclick="toggleShuffleAnswers()" id="btn-shuffle-a" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition flex items-center gap-1.5" title="Xáo trộn thứ tự đáp án A, B, C, D">
-                                <i class="fa-solid fa-random"></i> Trộn đáp án
+                            <button onclick="toggleShuffleAnswers()" id="btn-shuffle-a"
+                                class="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5"
+                                title="Đảo vị trí các đáp án A, B, C, D để chống học vẹt">
+                                <i class="fa-solid fa-random"></i> <span class="hidden sm:inline">Đảo đáp án</span>
                             </button>
-                            <button onclick="confirmResetProgress()" class="px-3 py-1.5 rounded-xl border border-rose-200 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition flex items-center gap-1.5" title="Xóa lịch sử làm bài">
-                                <i class="fa-solid fa-rotate-left"></i> Đặt lại
+                            <button onclick="toggleShuffleQuestions()" id="btn-shuffle-q"
+                                class="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5"
+                                title="Xáo trộn ngẫu nhiên thứ tự câu hỏi">
+                                <i class="fa-solid fa-shuffle"></i>
+                            </button>
+                            <button onclick="confirmResetProgress()"
+                                class="px-2.5 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/50 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
+                                title="Xóa lịch sử làm bài">
+                                <i class="fa-solid fa-rotate-left"></i>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Main Question Box -->
-                    <div id="practice-card" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-7 relative">
-                        <!-- Top Meta -->
-                        <div class="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
+                    <!-- Auto-Advance Countdown Bar -->
+                    <div id="auto-advance-bar-wrap"
+                        class="hidden h-1.5 w-full bg-emerald-100 dark:bg-emerald-950 rounded-full overflow-hidden">
+                        <div id="auto-advance-bar" class="h-full bg-emerald-500"></div>
+                    </div>
+
+                    <!-- 1A. STANDARD QUIZ CARD -->
+                    <div id="practice-card"
+                        class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 sm:p-7 relative">
+                        <!-- Top Meta Badges -->
+                        <div
+                            class="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800 flex-wrap">
                             <div class="flex items-center gap-2 flex-wrap">
-                                <span id="q-index-badge" class="px-3 py-1 rounded-lg bg-party-700 text-white font-bold text-xs">Câu 1 / 50</span>
-                                <span id="q-chapter-badge" class="px-2.5 py-1 rounded-lg bg-red-50 text-party-700 font-semibold text-xs border border-red-200">Chương 1</span>
-                                <span id="q-id-badge" class="px-2 py-0.5 rounded bg-slate-100 text-slate-500 font-mono text-[11px]">ID: #2992</span>
+                                <span id="q-index-badge"
+                                    class="px-3 py-1 rounded-lg bg-party-700 text-white font-bold text-xs">Câu 1 /
+                                    60</span>
+                                <span id="q-chapter-badge"
+                                    class="px-2.5 py-1 rounded-lg bg-red-50 dark:bg-red-950/60 text-party-700 dark:text-red-300 font-semibold text-xs border border-red-200 dark:border-red-800/60">Chương
+                                    1</span>
+                                <span id="q-topic-badge"
+                                    class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium text-xs">Chuyên
+                                    đề 1</span>
+                                
+                                <span id="q-id-badge"
+                                    class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-400 font-mono text-[11px]">ID:
+                                    #2992</span>
                             </div>
-                            <button onclick="toggleStarCurrent()" id="btn-star-current" class="w-9 h-9 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 hover:text-amber-500 hover:border-amber-300 transition text-lg" title="Đánh dấu câu hỏi quan trọng (Phím S)">
-                                <i class="fa-regular fa-star"></i>
-                            </button>
+
+                            <div class="flex items-center gap-1.5">
+                                <span id="q-mastery-pill"
+                                    class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500">⚪
+                                    Chưa học</span>
+                                
+                                <button onclick="toggleStarCurrent()" id="btn-star-current"
+                                    class="w-8 h-8 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-amber-500 transition text-base"
+                                    title="Đánh dấu sao (Phím S)">
+                                    <i class="fa-regular fa-star"></i>
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- Question Text -->
-                        <h2 id="q-content" class="text-base sm:text-lg font-bold text-slate-900 leading-relaxed mb-6">
+                        <!-- Question Stem with Smart Highlight -->
+                        <h2 id="q-content"
+                            class="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-relaxed mb-6">
                             Đang tải câu hỏi...
                         </h2>
 
-                        <!-- Answer Options List -->
+                        <!-- Answer Options -->
                         <div id="q-answers" class="space-y-3"></div>
 
-                        <!-- Instant Feedback Box -->
-                        <div id="q-feedback" class="hidden mt-6 p-4 rounded-xl border text-sm"></div>
+                        <!-- Instant Explanation Feedback -->
+                        <div id="q-feedback" class="hidden mt-5 p-4 rounded-xl border text-sm"></div>
 
-                        <!-- Bottom Navigation -->
-                        <div class="mt-7 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
-                            <button onclick="prevQuestion()" id="btn-prev" class="px-4 py-2.5 rounded-xl border border-slate-200 font-semibold text-xs sm:text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-40 transition flex items-center gap-2">
+                        <!-- Desktop Bottom Navigation -->
+                        <div
+                            class="mt-7 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+                            <button onclick="prevQuestion()" id="btn-prev"
+                                class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold text-xs sm:text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 transition flex items-center gap-2">
                                 <i class="fa-solid fa-arrow-left"></i> Câu trước
                             </button>
 
                             <div class="hidden sm:flex items-center gap-2 text-[11px] text-slate-400">
-                                <span class="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono">1-4</span> Chọn đáp án
-                                <span class="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono">←/→</span> Chuyển câu
-                                <span class="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono">S</span> Lưu sao
+                                <span
+                                    class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 font-mono">1-4</span>
+                                Chọn
+                                <span
+                                    class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 font-mono">←/→</span>
+                                Chuyển
+                                <span
+                                    class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 font-mono">Space</span>
+                                Lật thẻ
                             </div>
 
-                            <button onclick="nextQuestion()" id="btn-next" class="px-5 py-2.5 rounded-xl bg-party-600 hover:bg-party-700 text-white font-semibold text-xs sm:text-sm shadow-sm disabled:opacity-40 transition flex items-center gap-2">
+                            <button onclick="nextQuestion()" id="btn-next"
+                                class="px-5 py-2.5 rounded-xl bg-party-600 hover:bg-party-700 text-white font-semibold text-xs sm:text-sm shadow-sm disabled:opacity-40 transition flex items-center gap-2">
                                 Câu tiếp theo <i class="fa-solid fa-arrow-right"></i>
                             </button>
                         </div>
                     </div>
+
+                    <!-- 1B. 3D FLASHCARD MODE -->
+                    <div id="flashcard-container" class="hidden space-y-4">
+                        <div onclick="flipFlashcard()" class="perspective-1000 cursor-pointer select-none">
+                            <div id="flashcard-inner"
+                                class="preserve-3d relative w-full min-h-[320px] sm:min-h-[360px]">
+                                <!-- Front Side -->
+                                <div
+                                    class="backface-hidden absolute inset-0 bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-md p-6 sm:p-8 flex flex-col justify-between">
+                                    <div class="flex items-center justify-between text-xs text-slate-400">
+                                        <span id="fc-front-badge"
+                                            class="px-3 py-1 rounded-lg bg-party-700 text-white font-bold">Câu 1</span>
+                                        <span class="font-semibold text-amber-600 dark:text-amber-400"><i
+                                                class="fa-solid fa-hand-pointer mr-1"></i> Bấm hoặc nhấn Space để lật
+                                            xem đáp án</span>
+                                    </div>
+                                    <div id="fc-question-text"
+                                        class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white text-center leading-relaxed my-auto py-6">
+                                    </div>
+                                    <div class="text-center text-xs text-slate-400">Hãy tự nhẩm câu trả lời trước khi
+                                        lật thẻ!</div>
+                                </div>
+
+                                <!-- Back Side -->
+                                <div
+                                    class="backface-hidden rotate-y-180 absolute inset-0 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/90 dark:to-slate-900 rounded-2xl border-2 border-emerald-500 shadow-md p-6 sm:p-8 flex flex-col justify-between">
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="px-3 py-1 rounded-lg bg-emerald-600 text-white font-bold">ĐÁP ÁN
+                                            ĐÚNG</span>
+                                        <span class="text-emerald-700 dark:text-emerald-300 font-semibold">Đánh giá mức
+                                            độ nhớ bên dưới</span>
+                                    </div>
+                                    <div class="my-auto py-4 text-center space-y-3">
+                                        <div id="fc-answer-text"
+                                            class="text-lg sm:text-2xl font-extrabold text-emerald-900 dark:text-emerald-200 leading-relaxed">
+                                        </div>
+                                        <div id="fc-explanation-text"
+                                            class="text-xs sm:text-sm text-emerald-700 dark:text-emerald-400"></div>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2.5 pt-3 border-t border-emerald-200/60 dark:border-emerald-800/50"
+                                        onclick="event.stopPropagation()">
+                                        <button onclick="rateFlashcard(0)"
+                                            class="py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow transition">
+                                            🔴 Quên / Chưa thuộc
+                                        </button>
+                                        <button onclick="rateFlashcard(1)"
+                                            class="py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow transition">
+                                            🟡 Nhớ mang máng
+                                        </button>
+                                        <button onclick="rateFlashcard(2)"
+                                            class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow transition">
+                                            🟢 Đã thuộc làu
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
-                <!-- Right Column: Question Palette Grid (4 cols) -->
-                <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                <!-- Right Column: Desktop Question Palette (4 cols) -->
+                <div
+                    class="hidden lg:block lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 sticky top-28">
                     <div class="flex items-center justify-between mb-3">
-                        <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
-                            <i class="fa-solid fa-table-cells text-party-600"></i> Danh sách câu hỏi
+                        <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-table-cells text-party-600"></i> Bảng câu hỏi
                         </h3>
-                        <span id="palette-progress-text" class="text-xs font-semibold text-slate-500">0/0 đã làm</span>
+                        <span id="palette-progress-text"
+                            class="text-xs font-bold text-slate-500 dark:text-slate-400">0/0 đã làm</span>
                     </div>
 
-                    <!-- Legend -->
-                    <div class="flex flex-wrap gap-3 text-[11px] text-slate-600 mb-3 pb-3 border-b border-slate-100">
-                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-500 inline-block"></span> Đúng</span>
-                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-rose-500 inline-block"></span> Sai</span>
-                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-100 border border-slate-300 inline-block"></span> Chưa làm</span>
-                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded ring-2 ring-amber-400 inline-block"></span> Có gắn sao</span>
+                    <!-- 3-Bucket Legend -->
+                    <div
+                        class="grid grid-cols-2 gap-1.5 text-[11px] text-slate-600 dark:text-slate-400 mb-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                        <span class="flex items-center gap-1.5"><span
+                                class="w-3 h-3 rounded bg-emerald-500 inline-block"></span> Đã thuộc (≥2)</span>
+                        <span class="flex items-center gap-1.5"><span
+                                class="w-3 h-3 rounded bg-amber-500 inline-block"></span> Đang nhớ (1)</span>
+                        <span class="flex items-center gap-1.5"><span
+                                class="w-3 h-3 rounded bg-rose-500 inline-block"></span> Làm sai</span>
+                        <span class="flex items-center gap-1.5"><span
+                                class="w-3 h-3 rounded ring-2 ring-amber-400 inline-block"></span> Có gắn sao ★</span>
                     </div>
 
-                    <!-- Grid -->
-                    <div id="question-palette" class="grid grid-cols-6 sm:grid-cols-8 lg:grid-cols-6 gap-1.5 max-h-[420px] overflow-y-auto custom-scrollbar pr-1"></div>
+                    <div id="question-palette"
+                        class="grid grid-cols-6 gap-1.5 max-h-[420px] overflow-y-auto custom-scrollbar pr-1"></div>
                 </div>
-
             </div>
         </section>
 
-        <!-- ==================== TAB 2: EXAM MODE ==================== -->
+        <!-- ==================== TAB 2: EXAM MODE & DETAILED POST-EXAM REVIEW ==================== -->
         <section id="view-exam" class="hidden space-y-6">
-            <!-- Exam Setup Screen -->
-            <div id="exam-setup" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 max-w-2xl mx-auto">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-12 h-12 rounded-2xl bg-red-50 text-party-600 flex items-center justify-center text-2xl">
+            <!-- Exam Setup Card -->
+            <div id="exam-setup"
+                class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-8 max-w-2xl mx-auto">
+                <div class="flex items-center gap-3.5 mb-5">
+                    <div
+                        class="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-950/60 text-party-600 dark:text-red-400 flex items-center justify-center text-2xl">
                         <i class="fa-solid fa-file-signature"></i>
                     </div>
                     <div>
-                        <h2 class="text-xl font-extrabold text-slate-900">Thiết lập Đề Thi Thử VNR202</h2>
-                        <p class="text-xs sm:text-sm text-slate-500">Hệ thống trích xuất ngẫu nhiên câu hỏi từ Chương 1 & Chương 2</p>
+                        <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">Thi Thử VNR202 & Phân Tích Lỗi
+                            Sai</h2>
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Đề thi sinh ngẫu nhiên theo cấu
+                            trúc chuẩn — Có chế độ lọc làm lại riêng câu sai sau khi nộp bài</p>
                     </div>
                 </div>
 
-                <div class="space-y-4 mt-6">
+                <div class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-2">Phạm vi kiến thức</label>
-                        <select id="exam-scope" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-party-600">
+                        <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-2">Phạm vi
+                            ra đề</label>
+                        <select id="exam-scope"
+                            class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-party-600">
                             <option value="all">Tổng hợp Chương 1 & Chương 2 (Đề chuẩn giữa kỳ / cuối kỳ)</option>
                             <option value="ch1">Chỉ riêng Chương 1 (1920 - 1945)</option>
                             <option value="ch2">Chỉ riêng Chương 2 (1945 - 1975)</option>
+                            <option value="wrong">Chỉ lấy các câu bạn đang làm sai (Ôn tập khắc phục điểm yếu)</option>
                         </select>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-2">Số lượng câu hỏi</label>
-                            <select id="exam-count" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-party-600">
-                                <option value="20">20 câu (Kiểm tra nhanh)</option>
-                                <option value="40" selected>40 câu (Đề tiêu chuẩn)</option>
-                                <option value="50">50 câu (Đề tổng hợp)</option>
-                                <option value="60">60 câu (Đề nâng cao)</option>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-2">Số
+                                lượng câu hỏi</label>
+                            <select id="exam-count"
+                                class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-900 dark:text-white">
+                                <option value="20">20 câu (Kiểm tra nhanh 15p)</option>
+                                <option value="40" selected>40 câu (Đề chuẩn 30p)</option>
+                                <option value="50">50 câu (Đề tổng hợp 45p)</option>
+                                <option value="60">60 câu (Đề thử thách 60p)</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-2">Thời gian làm bài</label>
-                            <select id="exam-duration" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-party-600">
+                            <label
+                                class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-2">Thời
+                                gian làm bài</label>
+                            <select id="exam-duration"
+                                class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-900 dark:text-white">
                                 <option value="15">15 phút</option>
                                 <option value="30" selected>30 phút</option>
                                 <option value="45">45 phút</option>
@@ -313,64 +483,79 @@
                         </div>
                     </div>
 
-                    <div class="pt-4">
-                        <button onclick="startExam()" class="w-full py-3.5 rounded-xl bg-party-600 hover:bg-party-700 text-white font-bold text-sm shadow-lg transition flex items-center justify-center gap-2">
+                    <div class="pt-3">
+                        <button onclick="startExam()"
+                            class="w-full py-3.5 rounded-xl bg-party-600 hover:bg-party-700 text-white font-bold text-sm shadow-lg transition flex items-center justify-center gap-2">
                             <i class="fa-solid fa-play"></i> Bắt Đầu Làm Bài Thi
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Active Exam Screen -->
-            <div id="exam-active" class="hidden space-y-6">
-                <!-- Sticky Exam Bar -->
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-wrap items-center justify-between gap-4 sticky top-28 z-20">
+            <!-- Active Exam View -->
+            <div id="exam-active" class="hidden space-y-5">
+                <!-- Sticky Exam Header -->
+                <div
+                    class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-md p-4 flex flex-wrap items-center justify-between gap-4 sticky top-28 z-20">
                     <div class="flex items-center gap-3">
-                        <div class="px-3.5 py-2 rounded-xl bg-red-50 text-party-700 font-extrabold text-base flex items-center gap-2 border border-red-200">
+                        <div
+                            class="px-3.5 py-2 rounded-xl bg-red-50 dark:bg-red-950/60 text-party-700 dark:text-red-300 font-extrabold text-base flex items-center gap-2 border border-red-200 dark:border-red-800">
                             <i class="fa-regular fa-clock"></i>
                             <span id="exam-timer">30:00</span>
                         </div>
                         <div>
-                            <div class="text-xs text-slate-500 font-medium">Tiến độ hoàn thành</div>
-                            <div id="exam-progress-label" class="text-sm font-bold text-slate-900">Đã chọn 0 / 40 câu</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">Tiến độ làm bài</div>
+                            <div id="exam-progress-label" class="text-sm font-bold text-slate-900 dark:text-white">Đã
+                                chọn 0 / 40 câu</div>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <button onclick="cancelExam()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">
+                        <button onclick="cancelExam()"
+                            class="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                             Thoát đề
                         </button>
-                        <button onclick="submitExam()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow transition flex items-center gap-2">
-                            <i class="fa-solid fa-paper-plane"></i> Nộp Bài & Chấm Điểm
+                        <button id="btn-submit-exam" onclick="submitExam()"
+                            class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow transition flex items-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i> Nộp Bài & Xem Báo Cáo
                         </button>
                     </div>
                 </div>
 
-                <!-- Exam Result Banner (hidden until submitted) -->
-                <div id="exam-result-banner" class="hidden bg-white rounded-2xl border-2 border-emerald-500 shadow-md p-6"></div>
+                <!-- Post-Exam Detailed Review Dashboard -->
+                <div id="exam-result-banner"
+                    class="hidden bg-white dark:bg-slate-900 rounded-2xl border-2 border-emerald-500 shadow-lg p-6 space-y-4">
+                </div>
 
-                <!-- List of all exam questions -->
+                <!-- Exam Questions Container -->
                 <div id="exam-questions-list" class="space-y-4"></div>
             </div>
         </section>
 
         <!-- ==================== TAB 3: QUESTION BANK SEARCH ==================== -->
         <section id="view-bank" class="hidden space-y-4">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
+            <div
+                class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5">
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
-                    <div class="md:col-span-7 relative">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input id="bank-search-input" oninput="renderBankList()" type="text" placeholder="Nhập từ khóa câu hỏi hoặc đáp án (VD: Luận cương, Hiệp định Sơ bộ, Điện Biên Phủ...)" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-party-600">
+                    <div class="md:col-span-6 relative">
+                        <i
+                            class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input id="bank-search-input" oninput="renderBankList()" type="text"
+                            placeholder="Tìm nhanh câu hỏi, mốc năm, nghị quyết (VD: Luận cương, 10/59, Hiệp định Sơ bộ...)"
+                            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-party-600">
                     </div>
-                    <div class="md:col-span-3">
-                        <select id="bank-chapter-filter" onchange="renderBankList()" class="w-full py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-party-600">
-                            <option value="all">Tất cả Chương 1 & 2</option>
-                            <option value="1">Chương 1 (1920-1945)</option>
-                            <option value="2">Chương 2 (1945-1975)</option>
+                    <div class="md:col-span-4">
+                        <select id="bank-chapter-filter" onchange="renderBankList()"
+                            class="w-full py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-semibold text-slate-900 dark:text-white">
+                            <option value="all">Tất cả câu hỏi (Chương 1 & 2)</option>
+                            <option value="1">Chỉ Chương 1 (1930 - 1945)</option>
+                            <option value="2">Chỉ Chương 2 (1945 - 1975)</option>
+                            <option value="starred">⭐ Chỉ câu đánh dấu sao</option>
                         </select>
                     </div>
                     <div class="md:col-span-2 flex items-center justify-end">
-                        <span id="bank-count-label" class="text-xs font-bold text-slate-500">Hiển thị 0 câu</span>
+                        <span id="bank-count-label" class="text-xs font-bold text-slate-500 dark:text-slate-400">Hiển
+                            thị 0 câu</span>
                     </div>
                 </div>
             </div>
@@ -378,1038 +563,48 @@
             <div id="bank-list-container" class="space-y-3"></div>
         </section>
 
-        <!-- ==================== TAB 4: EXPORT FILTERED JS ==================== -->
-        <section id="view-export" class="hidden space-y-6">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
-                <div class="max-w-3xl">
-                    <span class="px-2.5 py-1 rounded-md bg-red-50 text-party-700 font-bold text-xs uppercase">Công cụ trích xuất chuẩn cấu trúc</span>
-                    <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2">Tải File Quizz Đã Lọc (Chương 1 & Chương 2)</h2>
-                    <p class="text-sm text-slate-600 mt-1 leading-relaxed">
-                        Tệp xuất ra giữ nguyên cấu trúc biến <code class="px-1.5 py-0.5 bg-slate-100 rounded font-mono text-xs">window.VNR202_DATA = {...};</code> giống hệt file gốc của bạn, đồng thời đã tự động loại bỏ các phương án rỗng (<code class="font-mono text-xs">content: ""</code>) để bạn nhúng trực tiếp vào bất kỳ trang web học tập nào.
-                    </p>
-                </div>
-
-                <!-- 3 Export Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                    <!-- Gộp Chương 1 & 2 -->
-                    <div class="p-5 rounded-2xl border-2 border-party-600 bg-red-50/40 flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between">
-                                <span class="px-2.5 py-1 rounded-lg bg-party-600 text-white font-bold text-xs">Khuyên dùng</span>
-                                <i class="fa-solid fa-layer-group text-party-600 text-xl"></i>
-                            </div>
-                            <h3 class="text-base font-extrabold text-slate-900 mt-3">Gộp Chương 1 & Chương 2</h3>
-                            <p class="text-xs text-slate-600 mt-1">Bao gồm toàn bộ câu hỏi giai đoạn 1920 - 1975, đã loại bỏ hoàn toàn Chương 3 (sau 1975).</p>
-                            <div class="mt-3 text-2xl font-black text-party-700" id="export-count-both">0 câu</div>
-                        </div>
-                        <button onclick="downloadFilteredJS('both')" class="mt-5 w-full py-2.5 px-4 rounded-xl bg-party-600 hover:bg-party-700 text-white font-bold text-xs sm:text-sm shadow transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-download"></i> Tải vnr202_chuong1_2.js
-                        </button>
-                    </div>
-
-                    <!-- Chỉ Chương 1 -->
-                    <div class="p-5 rounded-2xl border border-slate-200 bg-white flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between">
-                                <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs">Giai đoạn 1920 - 1945</span>
-                                <i class="fa-solid fa-flag text-red-500 text-xl"></i>
-                            </div>
-                            <h3 class="text-base font-extrabold text-slate-900 mt-3">Chỉ riêng Chương 1</h3>
-                            <p class="text-xs text-slate-600 mt-1">Sự ra đời của Đảng Cộng sản Việt Nam và lãnh đạo đấu tranh giành chính quyền (1930 - 1945).</p>
-                            <div class="mt-3 text-2xl font-black text-slate-800" id="export-count-ch1">0 câu</div>
-                        </div>
-                        <button onclick="downloadFilteredJS('ch1')" class="mt-5 w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-download"></i> Tải vnr202_chuong1.js
-                        </button>
-                    </div>
-
-                    <!-- Chỉ Chương 2 -->
-                    <div class="p-5 rounded-2xl border border-slate-200 bg-white flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between">
-                                <span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-bold text-xs">Giai đoạn 1945 - 1975</span>
-                                <i class="fa-solid fa-shield-halved text-amber-500 text-xl"></i>
-                            </div>
-                            <h3 class="text-base font-extrabold text-slate-900 mt-3">Chỉ riêng Chương 2</h3>
-                            <p class="text-xs text-slate-600 mt-1">Đảng lãnh đạo hai cuộc kháng chiến chống Pháp (1945-1954) và chống Mỹ (1954-1975).</p>
-                            <div class="mt-3 text-2xl font-black text-slate-800" id="export-count-ch2">0 câu</div>
-                        </div>
-                        <button onclick="downloadFilteredJS('ch2')" class="mt-5 w-full py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-download"></i> Tải vnr202_chuong2.js
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Code Preview & Copy -->
-                <div class="mt-8">
-                    <div class="flex items-center justify-between mb-2">
-                        <label class="text-xs font-bold uppercase text-slate-500">Xem trước nội dung file xuất (JSON Preview)</label>
-                        <button onclick="copyExportPreview()" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition flex items-center gap-1.5">
-                            <i class="fa-regular fa-copy"></i> Sao chép mã JS
-                        </button>
-                    </div>
-                    <textarea id="export-preview-box" readonly class="w-full h-64 p-4 rounded-xl bg-slate-900 text-emerald-400 font-mono text-xs focus:outline-none custom-scrollbar"></textarea>
-                </div>
-            </div>
-        </section>
-
+        
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200 mt-12 py-4">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
-            <div>Bám sát nội dung <strong>Giáo trình Lịch sử Đảng Cộng sản Việt Nam</strong> (Bộ Giáo dục và Đào tạo).</div>
-            <div>Mẹo: Nhấn phím <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded">1</kbd> <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded">2</kbd> <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded">3</kbd> <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded">4</kbd> để chọn nhanh đáp án.</div>
-        </div>
-    </footer>
+    <!-- Mobile Sticky Bottom Navigation Bar -->
+    <nav
+        class="lg:hidden fixed bottom-0 inset-x-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-40 px-3 py-2 flex items-center justify-between gap-2 shadow-2xl">
+        <button onclick="prevQuestion()"
+            class="flex-1 py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition">
+            <i class="fa-solid fa-arrow-left"></i> Trước
+        </button>
+        <button onclick="toggleMobilePaletteSheet(true)"
+            class="py-2.5 px-3.5 rounded-xl bg-red-50 dark:bg-red-950/60 text-party-700 dark:text-red-300 border border-red-200 dark:border-red-800 font-extrabold text-xs flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-table-cells"></i> <span id="mobile-nav-counter">1/60</span>
+        </button>
+        <button onclick="toggleStudyModeQuick()"
+            class="py-2.5 px-3 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-bold text-xs flex items-center justify-center">
+            <i class="fa-solid fa-clone"></i>
+        </button>
+        <button onclick="nextQuestion()"
+            class="flex-1 py-2.5 px-3 rounded-xl bg-party-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow active:scale-95 transition">
+            Tiếp <i class="fa-solid fa-arrow-right"></i>
+        </button>
+    </nav>
+
+    <!-- Dữ liệu câu hỏi & Bộ quy tắc vá lỗi -->
+    <script src="data/question-ids.js"></script>
+    <script src="data/sanitization-rules.js"></script>
+    <script src="data/vnr202.js"></script>
+
+    <!-- Các module JavaScript chức năng -->
+    <script src="js/state.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/highlighter.js"></script>
+    <script src="js/sanitizer.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/palette.js"></script>
+    <script src="js/modal.js"></script>
+    <script src="js/practice.js"></script>
+    <script src="js/exam.js"></script>
+    <script src="js/bank.js"></script>
+    <script src="js/app.js"></script>
 
-    <!-- Application Logic -->
-    <script>
-        // ============================================================================
-        // 1. DANH SÁCH ID CHUẨN CHƯƠNG 1 (206 CÂU) VÀ CHƯƠNG 2 (254 CÂU) TỪ VNR202.JS
-        // ============================================================================
-        const CH1_IDS = new Set([-423, -421, -417, -409, -403, -398, -386, -376, -374, -371, -361, -357, -355, -354, -342, -339, -338, -336, -334, -333, -332, -317, -316, -266, -265, -264, -261, -259, -258, -256, -254, -253, -252, -251, -250, -249, -248, -247, -244, -243, -242, -239, -237, -236, -234, -233, -232, -223, -217, -215, -211, -210, -209, -208, -195, -191, -176, -175, -169, -167, -164, -162, -149, -145, -144, -135, -134, -130, -122, -119, -117, -114, -102, -95, -83, -81, -77, -75, -65, -64, -58, -57, -48, -44, -40, -39, -29, -15, -7, -6, -2, 2992, 3004, 3005, 3009, 3013, 3023, 3025, 3027, 3032, 3034, 3039, 3040, 3042, 3050, 3056, 3059, 3065, 3066, 3075, 3076, 3081, 3083, 3084, 3088, 3092, 3093, 3096, 3098, 3100, 3103, 3104, 3108, 3114, 3118, 3119, 3121, 3123, 3124, 3125, 3126, 3127, 3132, 3133, 3136, 3139, 3142, 3148, 3150, 3155, 3159, 3167, 3168, 3171, 3174, 3176, 3178, 3180, 3184, 3192, 3193, 3195, 3198, 3205, 3206, 3207, 3209, 3210, 3213, 3214, 3217, 3219, 3222, 3223, 3227, 3234, 3238, 3241, 3243, 3249, 3252, 3257, 3261, 3266, 3277, 3283, 3284, 3287, 3289, 3290, 3296, 3298, 3299, 3316, 3317, 3318, 3320, 3325, 3329, 3332, 3341, 3343, 3346, 3349, 3355, 3359, 3360, 3365, 3368, 3372, 3378, 3381, 3388, 3391, 3409, 3410]);
-
-        const CH2_IDS = new Set([-435, -433, -432, -430, -426, -425, -424, -422, -416, -410, -408, -406, -402, -400, -397, -393, -382, -379, -375, -373, -370, -365, -364, -359, -351, -350, -349, -347, -341, -340, -337, -335, -326, -323, -289, -288, -286, -284, -282, -279, -278, -275, -274, -271, -270, -246, -245, -228, -226, -225, -222, -221, -214, -213, -206, -200, -199, -198, -197, -190, -189, -188, -186, -183, -181, -180, -179, -178, -166, -163, -153, -147, -141, -137, -126, -125, -116, -112, -110, -109, -100, -99, -98, -92, -91, -86, -84, -79, -67, -66, -60, -59, -51, -50, -49, -47, -36, -20, -19, -18, -12, -10, -9, -8, 2993, 2994, 2996, 2997, 2999, 3000, 3003, 3006, 3011, 3016, 3020, 3021, 3024, 3028, 3029, 3030, 3031, 3033, 3035, 3043, 3045, 3046, 3047, 3055, 3058, 3069, 3074, 3079, 3080, 3085, 3086, 3089, 3090, 3091, 3095, 3097, 3101, 3102, 3105, 3106, 3107, 3109, 3110, 3111, 3112, 3113, 3116, 3117, 3128, 3130, 3135, 3141, 3143, 3144, 3146, 3147, 3164, 3165, 3166, 3170, 3172, 3173, 3177, 3182, 3183, 3187, 3188, 3190, 3191, 3199, 3200, 3202, 3203, 3204, 3208, 3216, 3230, 3233, 3239, 3240, 3245, 3246, 3247, 3251, 3253, 3255, 3259, 3260, 3268, 3270, 3271, 3273, 3275, 3278, 3281, 3285, 3286, 3295, 3301, 3306, 3307, 3308, 3310, 3311, 3312, 3313, 3319, 3322, 3323, 3330, 3333, 3334, 3335, 3336, 3337, 3338, 3344, 3345, 3347, 3348, 3350, 3351, 3352, 3354, 3356, 3358, 3361, 3363, 3364, 3367, 3369, 3370, 3371, 3376, 3377, 3383, 3384, 3385, 3387, 3389, 3390, 3394, 3395, 3397, 3399, 3400, 3401, 3406, 3407, 3411]);
-
-        // Bộ câu hỏi mẫu trích trực tiếp từ vnr202.js để trải nghiệm ngay khi mở trang
-        const BUILTIN_SAMPLE_QUESTIONS = [
-            {"id": 2992, "content": "Lực lượng chủ yếu tham gia phong trào cách mạng 1930-1931 ở Việt Nam là lực lượng nào?", "explanation": "Đáp án: C", "answersList": [{"id": 16663, "content": "Tiểu tư sản, công nhân", "is_correct": false}, {"id": 16664, "content": "Nông dân, tiểu tư sản", "is_correct": false}, {"id": 16665, "content": "Công nhân và nông dân", "is_correct": true}, {"id": 16666, "content": "Nông dân, tư sản dân tộc", "is_correct": false}]},
-            {"id": 3004, "content": "Điểm khác nhau giữa Luận cương chính trị tháng 10/1930 với Cương lĩnh chính trị đầu tiên (2/1930) của Đảng là:", "explanation": "Đáp án: B", "answersList": [{"id": 16712, "content": "Đường lối quốc tế của cách mạng giải phóng dân tộc", "is_correct": false}, {"id": 16713, "content": "Đường lối tập hợp lực lượng bên trong của cách mạng", "is_correct": true}, {"id": 16714, "content": "Phương pháp tiến hành cách mạng", "is_correct": false}, {"id": 16715, "content": "Không có điểm khác nhau giữa 2 văn kiện", "is_correct": false}]},
-            {"id": 3005, "content": "Nguyễn Ái Quốc thành lập Hội Việt Nam Cách mạng Thanh niên ở đâu?", "explanation": "Đáp án: B", "answersList": [{"id": 16716, "content": "Hồng Kông, Trung Quốc.", "is_correct": false}, {"id": 16717, "content": "Quảng Châu, Trung Quốc.", "is_correct": true}, {"id": 16718, "content": "Thượng Hải, Trung Quốc.", "is_correct": false}, {"id": 16719, "content": "Cao Bằng, Việt Nam.", "is_correct": false}]},
-            {"id": 3009, "content": "\"Cuộc cách mạng Đông Dương hiện tại không phải là cuộc cách mạng tư sản dân quyền, cuộc cách mạng phải giải quyết hai vấn đề phản đế và điền địa nữa, mà là cuộc cách mạng chỉ phải giải quyết một vấn đề cần kíp \"dân tộc giải phóng\"\". Chủ trương trên của Đảng được khẳng định tại Hội nghị nào?", "explanation": "Đáp án: C", "answersList": [{"id": 16733, "content": "Hội nghị Ban Chấp hành Trung ương tháng 11/1939", "is_correct": false}, {"id": 16734, "content": "Hội nghị Cán bộ Trung ương tháng 11/1940", "is_correct": false}, {"id": 16735, "content": "Hội nghị Ban Chấp hành Trung ương tháng 5/1941", "is_correct": true}, {"id": 16736, "content": "Hội nghị Ban Thường vụ Trung ương tháng 3/1945", "is_correct": false}]},
-            {"id": 3013, "content": "Giai cấp công nhân Việt Nam ra đời từ:", "explanation": "Đáp án: A", "answersList": [{"id": 16749, "content": "Cuộc khai thác thuộc địa lần thứ nhất của thực dân Pháp", "is_correct": true}, {"id": 16750, "content": "Cuộc khai thác thuộc địa lần thứ hai của thực dân Pháp", "is_correct": false}, {"id": 16751, "content": "Cuộc xâm lược lần thứ nhất của thực dân Pháp", "is_correct": false}, {"id": 16752, "content": "Cuộc xâm lược lần thứ hai của thực dân Pháp", "is_correct": false}]},
-            {"id": 3023, "content": "Phong trào Xô viết Nghệ - Tĩnh bắt đầu từ ngày, tháng, năm nào?", "explanation": "Đáp án: A", "answersList": [{"id": 16789, "content": "Ngày 1/5/1930.", "is_correct": true}, {"id": 16790, "content": "Ngày 1/5/1931.", "is_correct": false}, {"id": 16791, "content": "Ngày 19/5/1930.", "is_correct": false}, {"id": 16792, "content": "Ngày 19/8/1930.", "is_correct": false}]},
-            {"id": 3025, "content": "Nguyên nhân nào làm cho phong trào ở Nghệ - Tĩnh lên cao nhất trong Xô viết Nghệ Tĩnh 1930 - 1931?", "explanation": "Đáp án: B", "answersList": [{"id": 16797, "content": "Vì Nghệ - Tĩnh đã lập được chính quyền xô viết", "is_correct": false}, {"id": 16798, "content": "Vì Nghệ - Tĩnh có tổ chức đảng và cơ sở quần chúng rất mạnh", "is_correct": true}, {"id": 16799, "content": "Vì nhân dân ở đây có lòng yêu nước và căm thù giặc sâu sắc", "is_correct": false}, {"id": 16800, "content": "Vì cơ sở công nghiệp Vinh - Bến Thủy ở Nghệ - Tĩnh là trung tâm kỹ nghệ lớn nhất ở Việt Nam", "is_correct": false}]},
-            {"id": 3027, "content": "Xu hướng giành độc lập dân tộc theo con đường cải cách đất nước gắn với tên tuổi của nhà yêu nước nào?", "explanation": "Đáp án: A", "answersList": [{"id": 16805, "content": "Phan Châu Trinh", "is_correct": true}, {"id": 16806, "content": "Phan Bội Châu", "is_correct": false}, {"id": 16807, "content": "Phan Đình Phùng", "is_correct": false}, {"id": 16808, "content": "Phan Văn Trường", "is_correct": false}]},
-            {"id": 3032, "content": "Chính phủ lâm thời nước Việt Nam Dân chủ Cộng hòa ra đời từ tổ chức nào?", "explanation": "Đáp án: B", "answersList": [{"id": 16825, "content": "Mặt trận Việt Minh", "is_correct": false}, {"id": 16826, "content": "Ủy ban Dân tộc Giải phóng Việt Nam", "is_correct": true}, {"id": 16827, "content": "Ủy ban Lâm thời Khu giải phóng", "is_correct": false}, {"id": 16828, "content": "Ủy ban Khởi nghĩa", "is_correct": false}]},
-            {"id": 3034, "content": "Sự kiện nào dưới đây đánh dấu khuynh hướng cách mạng vô sản giành quyền lãnh đạo đối với cách mạng Việt Nam?", "explanation": "Đáp án: D", "answersList": [{"id": 16833, "content": "Hội Việt Nam Cách mạng thanh niên ra đời", "is_correct": false}, {"id": 16834, "content": "Tân Việt Cách mạng đảng bị phân hoá", "is_correct": false}, {"id": 16835, "content": "Sự ra đời của ba tổ chức cộng sản", "is_correct": false}, {"id": 16836, "content": "Đảng Cộng sản Việt Nam được thành lập", "is_correct": true}]},
-            {"id": 3050, "content": "Đối tượng của cách mạng Việt Nam được xác định trong Cương lĩnh chính trị đầu tiên của Đảng (2/1930) là:", "explanation": "Đáp án: D", "answersList": [{"id": 16897, "content": "Phong kiến, đế quốc", "is_correct": false}, {"id": 16898, "content": "Đế quốc, tư sản phản cách mạng", "is_correct": false}, {"id": 16899, "content": "Thực dân Pháp và tư sản mại bản", "is_correct": false}, {"id": 16900, "content": "Đế quốc, phong kiến và tư sản phản cách mạng", "is_correct": true}]},
-            {"id": 3066, "content": "Chủ trương chuyển hướng chiến lược cách mạng từ làm cách mạng tư sản dân quyền sang làm cách mạng giải phóng dân tộc được đặt ra từ Hội nghị nào của Đảng?", "explanation": "Đáp án: B", "answersList": [{"id": 16964, "content": "Hội nghị Ban Chấp hành Trung ương tháng 10/1930", "is_correct": false}, {"id": 16965, "content": "Hội nghị Ban Chấp hành Trung ương tháng 11/1939", "is_correct": true}, {"id": 16966, "content": "Hội nghị Cán bộ Trung ương tháng 11/1940", "is_correct": false}, {"id": 16967, "content": "Hội nghị Ban Chấp hành Trung ương tháng 5/1941", "is_correct": false}]},
-            {"id": 3076, "content": "Điều kiện trực tiếp mở ra Phong trào dân chủ 1936 - 1939 do Đảng lãnh đạo là:", "explanation": "Đáp án: D", "answersList": [{"id": 17004, "content": "Khủng hoảng kinh tế thế giới 1929 - 1933", "is_correct": false}, {"id": 17005, "content": "Quốc tế Cộng sản thay đổi chủ trương", "is_correct": false}, {"id": 17006, "content": "Đảng Cộng sản Đông Dương ban hành chính sách mới", "is_correct": false}, {"id": 17007, "content": "Chính phủ Mặt trận Nhân dân lên cầm quyền ở Pháp", "is_correct": true}]},
-            {"id": 3081, "content": "Đại hội lần thứ I của Đảng Cộng sản Đông Dương được tổ chức tại đâu?", "explanation": "Đáp án: C", "answersList": [{"id": 17025, "content": "Quảng Châu", "is_correct": false}, {"id": 17026, "content": "Hồng Công", "is_correct": false}, {"id": 17027, "content": "Ma Cao", "is_correct": true}, {"id": 17028, "content": "Thượng Hải", "is_correct": false}]},
-            {"id": 3083, "content": "Sự kiện nào đánh dấu Nguyễn Ái Quốc bước đầu tìm thấy con đường cứu nước đúng đắn cho dân tộc?", "explanation": "Đáp án: C", "answersList": [{"id": 17033, "content": "Nguyễn Ái Quốc gửi Bản yêu sách của nhân dân An Nam đến Hội nghị Véc-xai ngày 18/6/1919.", "is_correct": false}, {"id": 17034, "content": "Nguyễn Ái Quốc tham gia sáng lập Đảng Cộng sản Pháp ngày 25/12/1920.", "is_correct": false}, {"id": 17035, "content": "Nguyễn Ái Quốc đọc Sơ thảo lần thứ nhất những Luận cương về vấn đề dân tộc và vấn đề thuộc địa của Lê-nin vào tháng 7/1920.", "is_correct": true}, {"id": 17036, "content": "Nguyễn Ái Quốc thành lập Hội Việt Nam Cách mạng Thanh niên vào tháng 6/1925.", "is_correct": false}]},
-            {"id": 3092, "content": "Nhược điểm/hạn chế của Luận cương chính trị tháng 10/1930 do Trần Phú soạn thảo là:", "explanation": "Đáp án: D", "answersList": [{"id": 17070, "content": "Chưa đặt nhiệm vụ giải phóng dân tộc lên hàng đầu, nặng về đấu tranh giai cấp", "is_correct": false}, {"id": 17071, "content": "Không đánh giá đúng khả năng cách mạng của tầng lớp tiểu tư sản, tư sản dân tộc", "is_correct": false}, {"id": 17072, "content": "Chưa đề ra được chiến lược đại đoàn kết toàn dân tộc rộng rãi", "is_correct": false}, {"id": 17073, "content": "Tất cả các phương án trên đều đúng", "is_correct": true}]},
-            {"id": 3108, "content": "Cương lĩnh đầu tiên của Đảng đã xác định mục tiêu chiến lược của cách mạng Việt Nam là gì?", "explanation": "Đáp án: C", "answersList": [{"id": 17136, "content": "Xây dựng một nước Việt Nam dân giàu, nước mạnh, dân chủ, công bằng, văn minh", "is_correct": false}, {"id": 17137, "content": "Xây dựng một nước Việt Nam dân giàu mạnh", "is_correct": false}, {"id": 17138, "content": "Làm tư sản dân quyền cách mạng và thổ địa cách mạng để đi tới xã hội cộng sản", "is_correct": true}, {"id": 17139, "content": "Cách mạng tư sản dân quyền, lập chính quyền của công nông bằng hình thức Xô viết", "is_correct": false}]},
-            {"id": 3127, "content": "Hồ Chí Minh đọc bản Sơ thảo lần thứ nhất những luận cương về vấn đề dân tộc và vấn đề thuộc địa của Lênin trên báo nào?", "explanation": "Đáp án: C", "answersList": [{"id": 17212, "content": "Thợ thuyền", "is_correct": false}, {"id": 17213, "content": "Tình cảnh công nhân Anh", "is_correct": false}, {"id": 17214, "content": "Nhân đạo", "is_correct": true}, {"id": 17215, "content": "Người cùng khổ", "is_correct": false}]},
-            {"id": 3176, "content": "Căn cứ địa cách mạng đầu tiên của Việt Nam trong giai đoạn 1939 - 1945 là:", "explanation": "Đáp án: B", "answersList": [{"id": 17411, "content": "Cao Bằng", "is_correct": false}, {"id": 17412, "content": "Bắc Sơn - Võ Nhai", "is_correct": true}, {"id": 17413, "content": "Thái Nguyên", "is_correct": false}, {"id": 17414, "content": "Tuyên Quang", "is_correct": false}]},
-            {"id": 3180, "content": "Tổng bí thư đầu tiên của Đảng ta là:", "explanation": "Đáp án: A", "answersList": [{"id": 17428, "content": "Trần Phú", "is_correct": true}, {"id": 17429, "content": "Nguyễn Văn Cừ", "is_correct": false}, {"id": 17430, "content": "Trường Chinh", "is_correct": false}, {"id": 17431, "content": "Lê Hồng Phong", "is_correct": false}]},
-            {"id": 3213, "content": "Đâu là luận điểm sáng tạo của Hồ Chí Minh khi vận dụng chủ nghĩa Mác - Lênin về việc ra đời của Đảng Cộng sản Việt Nam?", "explanation": "Đáp án: C", "answersList": [{"id": 17566, "content": "Đảng Cộng sản Việt Nam ra đời là sản phẩm kết hợp giữa chủ nghĩa Mác với phong trào công nhân Việt Nam", "is_correct": false}, {"id": 17567, "content": "Đảng Cộng sản Việt Nam ra đời là sản phẩm kết hợp giữa chủ nghĩa Mác với phong trào yêu nước Việt Nam", "is_correct": false}, {"id": 17568, "content": "Đảng Cộng sản Việt Nam là sản phẩm của sự kết hợp chủ nghĩa Mác - Lênin với phong trào công nhân và phong trào yêu nước của nhân dân Việt Nam", "is_correct": true}, {"id": 17569, "content": "Đảng Cộng sản Việt Nam là sản phẩm của sự kết hợp phong trào công nhân và phong trào yêu nước Việt Nam", "is_correct": false}]},
-            {"id": 3238, "content": "Hội nghị Trung ương 8 (5/1941) họp tại Pác Bó (Cao Bằng) đã bầu ai làm Tổng Bí thư của Đảng?", "explanation": "Đáp án: C", "answersList": [{"id": 17666, "content": "Nguyễn Ái Quốc", "is_correct": false}, {"id": 17667, "content": "Nguyễn Văn Cừ", "is_correct": false}, {"id": 17668, "content": "Trường Chinh", "is_correct": true}, {"id": 17669, "content": "Lê Duẩn", "is_correct": false}]},
-            {"id": -409, "content": "Lãnh tụ Nguyễn Ái Quốc đã đề cập những vấn đề cơ bản của một cương lĩnh chính trị, qua đó chuẩn bị về tư tưởng chính trị cho việc thành lập Đảng thông qua tác phẩm nào?", "explanation": "Đáp án: A", "answersList": [{"id": -1616, "content": "Đường Kách Mệnh", "is_correct": true}, {"id": -1617, "content": "Bản án chế độ thực dân Pháp", "is_correct": false}, {"id": -1618, "content": "Đông Dương", "is_correct": false}, {"id": -1619, "content": "Điều lệ vắn tắt, Chương trình tóm tắt của Đảng", "is_correct": false}]},
-            {"id": -77, "content": "Điền vào chỗ trống: Đêm 9/3/1945, Nhật đảo chính Pháp, ngày 12-3-1945, ... đã ra Bản Chỉ thị \"Nhật Pháp bắn nhau và hành động của chúng ta\"", "explanation": "Đáp án: A", "answersList": [{"id": -304, "content": "Ban Thường vụ Trung ương Đảng", "is_correct": true}, {"id": -305, "content": "Trung ương cục miền Nam", "is_correct": false}, {"id": -306, "content": "Quốc dân đại hội", "is_correct": false}, {"id": -307, "content": "Đại hội toàn quốc của Đảng", "is_correct": false}]},
-            {"id": -95, "content": "Đại biểu của tổ chức cộng sản nào không tham dự Hội nghị thành lập Đảng đầu năm 1930?", "explanation": "Đáp án: A", "answersList": [{"id": -376, "content": "Đông Dương cộng sản liên đoàn", "is_correct": true}, {"id": -377, "content": "An Nam cộng sản Đảng", "is_correct": false}, {"id": -378, "content": "Đông Dương cộng sản Đảng", "is_correct": false}, {"id": -379, "content": "Quốc tế cộng sản", "is_correct": false}]},
-            // Chương 2
-            {"id": 2993, "content": "Quan điểm nào sau đây của Đảng về nhiệm vụ và mối quan hệ giữa hai miền sau khi Mỹ thực hiện chiến lược “Chiến tranh cục bộ”?", "explanation": "Đáp án: A", "answersList": [{"id": 16667, "content": "Trong cuộc chiến tranh chống Mỹ của nhân dân cả nước, miền Nam là tiền tuyến lớn, miền Bắc là hậu phương lớn. Bảo vệ miền Bắc là nhiệm vụ của cả nước.", "is_correct": true}, {"id": 16668, "content": "Trong cuộc chiến tranh chống Mỹ của nhân dân cả nước, miền Nam là hậu phương lớn, miền Bắc là tiền tuyến lớn.", "is_correct": false}, {"id": 16669, "content": "Trong cuộc chiến tranh chống Mỹ của nhân dân cả nước, miền Nam là tiền tuyến lớn, miền Bắc là hậu phương lớn. Bảo vệ miền Bắc là nhiệm vụ của miền Bắc.", "is_correct": false}, {"id": 16670, "content": "Miền Bắc là tiền tuyến lớn, miền Nam là hậu phương lớn.", "is_correct": false}]},
-            {"id": 2994, "content": "Sự kiện nào mở đầu cho giai đoạn “hòa để tiến” (dàn hòa với Pháp) nhằm đẩy nhanh quân Tưởng về nước thời kỳ 1945 - 1946?", "explanation": "Đáp án: B", "answersList": [{"id": 16672, "content": "Pháp ngừng bắn ở Nam Bộ (10/1945)", "is_correct": false}, {"id": 16673, "content": "Ký Hiệp định Sơ bộ Việt - Pháp (3/1946)", "is_correct": true}, {"id": 16674, "content": "Chủ tịch Hồ Chí Minh thăm Pháp (5/1946)", "is_correct": false}, {"id": 16675, "content": "Đàm phán chính thức Việt - Pháp ở Phông-tên-nơ-blô (7/1946)", "is_correct": false}]},
-            {"id": 2996, "content": "Tại hội nghị nào, Ban Chấp hành Trung ương Đảng quyết định để nhân dân miền Nam sử dụng bạo lực cách mạng đánh đổ chính quyền Mỹ - Diệm?", "explanation": "Đáp án: A", "answersList": [{"id": 16680, "content": "Hội nghị Trung ương lần thứ 15 (1/1959)", "is_correct": true}, {"id": 16681, "content": "Hội nghị Trung ương lần thứ 11 (3/1965)", "is_correct": false}, {"id": 16682, "content": "Hội nghị Trung ương lần thứ 12 (12/1965)", "is_correct": false}, {"id": 16683, "content": "Hội nghị Trung ương lần thứ 21 (7/1973)", "is_correct": false}]},
-            {"id": 2997, "content": "Kế hoạch quân sự được xem là lớn nhất trong quá trình xâm lược Việt Nam của Pháp từ 1945-1954?", "explanation": "Đáp án: B", "answersList": [{"id": 16684, "content": "Kế hoạch Rơve", "is_correct": false}, {"id": 16685, "content": "Kế hoạch Nava", "is_correct": true}, {"id": 16686, "content": "Kế hoạch \"đánh nhanh thắng nhanh\"", "is_correct": false}, {"id": 16687, "content": "Kế hoạch Đờ Lát đờ Tátxinhi", "is_correct": false}]},
-            {"id": 2999, "content": "Đặc điểm nổi bật nhất về tình hình chính trị ở Việt Nam sau khi Hiệp định Giơ-ne-vơ về Đông Dương được ký kết là gì?", "explanation": "Đáp án: C", "answersList": [{"id": 16692, "content": "Hà Nội được giải phóng.", "is_correct": false}, {"id": 16693, "content": "Pháp rút quân khỏi miền Bắc.", "is_correct": false}, {"id": 16694, "content": "Đất nước bị chia thành hai miền với hai chế độ chính trị - xã hội khác nhau.", "is_correct": true}, {"id": 16695, "content": "Nhân dân hai miền tiến hành tổ chức hiệp thương tổng tuyển cử thống nhất đất nước.", "is_correct": false}]},
-            {"id": 3000, "content": "“Chúng ta thà hi sinh tất cả, chứ nhất định không chịu mất nước, nhất định không chịu làm nô lệ...” là đoạn trích trong văn kiện nào?", "explanation": "Đáp án: B", "answersList": [{"id": 16696, "content": "Chỉ thị Toàn dân kháng chiến của Ban Thường vụ Trung ương Đảng", "is_correct": false}, {"id": 16697, "content": "Lời kêu gọi toàn quốc kháng chiến của Chủ tịch Hồ Chí Minh", "is_correct": true}, {"id": 16698, "content": "Tác phẩm Kháng chiến nhất định thắng lợi của Tổng Bí thư Trường Chinh", "is_correct": false}, {"id": 16699, "content": "Chỉ thị sửa soạn khởi nghĩa của Tổng bộ Việt Minh", "is_correct": false}]},
-            {"id": 3003, "content": "Hội nghị Trung ương 13 (1/1967) chủ trương mở mặt trận nào để tiến công địch?", "explanation": "Đáp án: D", "answersList": [{"id": 16708, "content": "Mặt trận chính trị", "is_correct": false}, {"id": 16709, "content": "Mặt trận quân sự", "is_correct": false}, {"id": 16710, "content": "Mặt trận binh vận", "is_correct": false}, {"id": 16711, "content": "Mặt trận ngoại giao", "is_correct": true}]},
-            {"id": 3006, "content": "Để thực hiện chính sách \"tố cộng, diệt cộng\", chính quyền Ngô Đình Diệm đã ban hành văn bản nào?", "explanation": "Đáp án: A", "answersList": [{"id": 16721, "content": "Luật 10/59.", "is_correct": true}, {"id": 16722, "content": "Luật Nhân quyền.", "is_correct": false}, {"id": 16723, "content": "Luật Bình định.", "is_correct": false}, {"id": 16724, "content": "Tất cả các phương án trên đều đúng.", "is_correct": false}]},
-            {"id": 3020, "content": "Ai là Tư lệnh Chiến dịch Hồ Chí Minh giải phóng Sài Gòn - Gia Định tháng 4/1975?", "explanation": "Đáp án: B", "answersList": [{"id": 16777, "content": "Lê Trọng Tấn", "is_correct": false}, {"id": 16778, "content": "Văn Tiến Dũng", "is_correct": true}, {"id": 16779, "content": "Trần Văn Trà", "is_correct": false}, {"id": 16780, "content": "Hoàng Văn Thái", "is_correct": false}]},
-            {"id": 3031, "content": "Khẩu hiệu được Đảng đề ra trong giai đoạn giữ vững và củng cố chính quyền cách mạng 1945 - 1946 là:", "explanation": "Đáp án: B", "answersList": [{"id": 16821, "content": "Việt Nam độc lập muôn năm", "is_correct": false}, {"id": 16822, "content": "Dân tộc trên hết, Tổ quốc trên hết", "is_correct": true}, {"id": 16823, "content": "Đoàn kết, đoàn kết, đại đoàn kết", "is_correct": false}, {"id": 16824, "content": "Mặt trận Việt Minh muôn năm", "is_correct": false}]},
-            {"id": 3033, "content": "Trong thời kỳ 1954 - 1975, cuộc cách mạng dân tộc dân chủ nhân dân ở miền Nam Việt Nam có vai trò quyết định trực tiếp đối với sự nghiệp giải phóng miền Nam vì cuộc cách mạng này:", "explanation": "Đáp án: D", "answersList": [{"id": 16829, "content": "Bảo vệ vững chắc hậu phương miền Bắc xã hội chủ nghĩa", "is_correct": false}, {"id": 16830, "content": "Làm thất bại hoàn toàn chiến lược toàn cầu của Mỹ", "is_correct": false}, {"id": 16831, "content": "Trực tiếp xóa bỏ ách áp bức, bóc lột của địa chủ và tư sản miền Nam", "is_correct": false}, {"id": 16832, "content": "Trực tiếp đánh đổ ách thống trị của Mỹ và chính quyền Sài Gòn", "is_correct": true}]},
-            {"id": 3043, "content": "Hiệp định Pari về chấm dứt chiến tranh, lập lại hòa bình ở Việt Nam được ký kết (1/1973) đánh dấu hoàn thành nhiệm vụ của cách mạng miền Nam, đó là:", "explanation": "Đáp án: C", "answersList": [{"id": 16869, "content": "Thống nhất đất nước", "is_correct": false}, {"id": 16870, "content": "Giải phóng miền Nam", "is_correct": false}, {"id": 16871, "content": "Buộc quân đội Mỹ rút khỏi miền Nam", "is_correct": true}, {"id": 16872, "content": "Chiến tranh kết thúc", "is_correct": false}]},
-            {"id": 3045, "content": "Đại hội lần thứ II của Đảng (1951) đã bầu ai làm Tổng Bí thư?", "explanation": "Đáp án: C", "answersList": [{"id": 16877, "content": "Hồ Chí Minh", "is_correct": false}, {"id": 16878, "content": "Lê Duẩn", "is_correct": false}, {"id": 16879, "content": "Trường Chinh", "is_correct": true}, {"id": 16880, "content": "Phạm Văn Đồng", "is_correct": false}]},
-            {"id": 3047, "content": "Đại hội II của Đảng Lao động Việt Nam vạch ra tính chất của xã hội Việt Nam là:", "explanation": "Đáp án: A", "answersList": [{"id": 16885, "content": "Dân chủ nhân dân, một phần thuộc địa và nửa phong kiến", "is_correct": true}, {"id": 16886, "content": "Dân chủ nhân dân, thuộc địa và nửa phong kiến", "is_correct": false}, {"id": 16887, "content": "Dân chủ nhân dân và nửa phong kiến", "is_correct": false}, {"id": 16888, "content": "Một phần thuộc địa và nửa phong kiến", "is_correct": false}]},
-            {"id": 3085, "content": "Mặt trận Dân tộc giải phóng miền Nam Việt Nam được thành lập do ai làm chủ tịch?", "explanation": "Đáp án: A", "answersList": [{"id": 17041, "content": "Nguyễn Hữu Thọ", "is_correct": true}, {"id": 17042, "content": "Nguyễn Thị Định", "is_correct": false}, {"id": 17043, "content": "Võ Nguyên Giáp", "is_correct": false}, {"id": 17044, "content": "Trường Chinh", "is_correct": false}]},
-            {"id": 3102, "content": "Chiến dịch Điện Biên Phủ bắt đầu vào ngày nào và kết thúc vào ngày nào?", "explanation": "Đáp án: A", "answersList": [{"id": 17111, "content": "Bắt đầu 13/3/1954, kết thúc 7/5/1954", "is_correct": true}, {"id": 17112, "content": "Bắt đầu 1/4/1954, kết thúc 2/5/1954", "is_correct": false}, {"id": 17113, "content": "Bắt đầu 15/3/1954, kết thúc 25/5/1954", "is_correct": false}, {"id": 17114, "content": "Bắt đầu 2/3/1954, kết thúc 10/5/1954", "is_correct": false}]},
-            {"id": 3112, "content": "Nhiệm vụ chống giặc dốt sau Cách mạng tháng Tám (1945) thể hiện qua phong trào nào sau đây?", "explanation": "Đáp án: C", "answersList": [{"id": 17152, "content": "Toàn dân đưa trẻ đến trường", "is_correct": false}, {"id": 17153, "content": "Toàn dân tham gia xóa nạn mù chữ", "is_correct": false}, {"id": 17154, "content": "Bình dân học vụ", "is_correct": true}, {"id": 17155, "content": "Truyền bá quốc ngữ", "is_correct": false}]},
-            {"id": 3113, "content": "Để kéo dài thời gian hòa hoãn chuẩn bị lực lượng cho cuộc kháng chiến toàn quốc chống Pháp, sau Hiệp định Sơ bộ (6/3/1946), Chủ tịch Hồ Chí Minh tiếp tục ký với Pháp bản:", "explanation": "Đáp án: D", "answersList": [{"id": 17156, "content": "Hiệp định Giơ-ne-vơ", "is_correct": false}, {"id": 17157, "content": "Hòa ước", "is_correct": false}, {"id": 17158, "content": "Hiệp định Paris", "is_correct": false}, {"id": 17159, "content": "Tạm ước 14/9", "is_correct": true}]},
-            {"id": 3135, "content": "Đại hội III (9-1960) của Đảng đã thông qua đường lối nào?", "explanation": "Đáp án: D", "answersList": [{"id": 17244, "content": "Đánh đuổi thực dân Pháp và can thiệp Mỹ xâm lược...", "is_correct": false}, {"id": 17245, "content": "Cả nước quá độ đi lên chủ nghĩa xã hội", "is_correct": false}, {"id": 17246, "content": "Phát triển chế độ dân chủ nhân dân, gây cơ sở cho chủ nghĩa xã hội", "is_correct": false}, {"id": 17247, "content": "Đường lối cách mạng xã hội chủ nghĩa ở miền Bắc và cách mạng dân tộc dân chủ nhân dân ở miền Nam", "is_correct": true}]},
-            {"id": 3183, "content": "Chỉ thị Kháng chiến kiến quốc (25/11/1945) xác định kẻ thù chính của cách mạng Việt Nam lúc bấy giờ là:", "explanation": "Đáp án: A", "answersList": [{"id": 17440, "content": "Thực dân Pháp", "is_correct": true}, {"id": 17441, "content": "Thực dân Anh", "is_correct": false}, {"id": 17442, "content": "Quân đội Tưởng Giới Thạch", "is_correct": false}, {"id": 17443, "content": "Lực lượng Việt Quốc, Việt Cách", "is_correct": false}]},
-            {"id": 3190, "content": "Đường lối kháng chiến chống thực dân Pháp xâm lược của Đảng (1946-1954) là:", "explanation": "Đáp án: A", "answersList": [{"id": 17469, "content": "Toàn dân, toàn diện, lâu dài và tự lực cánh sinh", "is_correct": true}, {"id": 17470, "content": "Toàn diện, lâu dài và tự lực cánh sinh", "is_correct": false}, {"id": 17471, "content": "Chiến tranh nhân dân, toàn diện và tự lực cánh sinh", "is_correct": false}, {"id": 17472, "content": "Chiến tranh nhân dân, toàn diện, lâu dài và tranh thủ ngoại lực", "is_correct": false}]},
-            {"id": -59, "content": "Phương châm tác chiến của Quân đội nhân dân Việt Nam trong chiến dịch Điện Biên Phủ là", "explanation": "Đáp án: D", "answersList": [{"id": -232, "content": "Đánh nhanh, thắng nhanh", "is_correct": false}, {"id": -233, "content": "Đánh thần tốc, táo bạo, chắc thắng", "is_correct": false}, {"id": -234, "content": "Đánh thần tốc, táo bạo, bất ngờ", "is_correct": false}, {"id": -235, "content": "Đánh chắc, tiến chắc", "is_correct": true}]},
-            {"id": -153, "content": "Đường lối toàn quốc kháng chiến tập trung trong ba văn kiện quan trọng đó là:", "explanation": "Đáp án: A", "answersList": [{"id": -607, "content": "Toàn dân kháng chiến, Lời kêu gọi toàn quốc kháng chiến, Kháng chiến nhất định thắng lợi", "is_correct": true}, {"id": -608, "content": "Nhật Pháp bắn nhau và hành động của chúng ta, Kháng chiến kiến quốc, Kháng chiến nhất định thắng lợi", "is_correct": false}, {"id": -609, "content": "Toàn dân kháng chiến, Nhật Pháp bắn nhau và hành động của chúng ta, Kháng chiến kiến quốc", "is_correct": false}, {"id": -610, "content": "Lời kêu gọi toàn quốc kháng chiến, Nhật Pháp bắn nhau và hành động của chúng ta, Kháng chiến kiến quốc", "is_correct": false}]},
-            {"id": -214, "content": "Đại hội lần thứ III (9-1960), Đảng Lao động Việt Nam khẳng định nhiệm vụ cách mạng giữ vai trò quyết định nhất đối với sự phát triển cách mạng cả nước là :", "explanation": "Đáp án: A", "answersList": [{"id": -850, "content": "Cách mạng xã hội chủ nghĩa ở miền Bắc", "is_correct": true}, {"id": -851, "content": "Cách mạng dân tộc dân chủ nhân dân ở miền Nam", "is_correct": false}, {"id": -852, "content": "Cách mạng hai miền đều quyết định như nhau", "is_correct": false}, {"id": -853, "content": "Các phương án trả lời đều sai", "is_correct": false}]},
-            {"id": -370, "content": "Cuộc tổng tiến công và nổi dậy mùa xuân 1975 bắt đầu bằng chiến dịch nào?", "explanation": "Đáp án: B", "answersList": [{"id": -1466, "content": "Chiến dịch Mậu Thân (1968)", "is_correct": false}, {"id": -1467, "content": "Chiến dịch Tây Nguyên (3/1975)", "is_correct": true}, {"id": -1468, "content": "Chiến dịch Huế - Đà Nẵng (3/1975)", "is_correct": false}, {"id": -1469, "content": "Chiến dịch Hồ Chí Minh (4/1975)", "is_correct": false}]}
-        ];
-
-        // ============================================================================
-        // 2. BIẾN TRẠNG THÁI TOÀN CỤC (APPLICATION STATE)
-        // ============================================================================
-        let allQuestions = [];          // Toàn bộ câu hỏi Chương 1 & 2 hiện tại
-        let filteredQuestions = [];     // Danh sách câu hỏi đang lọc trong Practice Mode
-        let currentIndex = 0;           // Vị trí câu hỏi hiện tại trong Practice Mode
-        let shuffleQuestions = false;
-        let shuffleAnswers = false;
-        let isFullDatasetLoaded = false;
-
-        // Lưu trữ trạng thái học tập vào localStorage
-        const STORAGE_KEY = 'VNR202_PROGRESS_V1';
-        let userProgress = {
-            answered: {},   // { [questionId]: { selectedId, isCorrect } }
-            starred: []     // [questionId, ...]
-        };
-
-        // Trạng thái Thi Thử (Exam Mode)
-        let examQuestions = [];
-        let examUserSelections = {}; // { [questionId]: answerId }
-        let examTimerInterval = null;
-        let examRemainingSeconds = 0;
-        let isExamSubmitted = false;
-
-        // ============================================================================
-        // 3. HÀM TIỆN ÍCH & PHÂN LOẠI CHƯƠNG 1 / CHƯƠNG 2
-        // ============================================================================
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            const bgClass = type === 'success' ? 'bg-emerald-600' : (type === 'warning' ? 'bg-amber-600' : 'bg-rose-600');
-            const iconClass = type === 'success' ? 'fa-circle-check' : (type === 'warning' ? 'fa-circle-exclamation' : 'fa-triangle-exclamation');
-
-            toast.className = `${bgClass} text-white px-4 py-3 rounded-xl shadow-lg text-xs sm:text-sm font-semibold flex items-center gap-2.5 pointer-events-auto transition-all duration-300`;
-            toast.innerHTML = `<i class="fa-solid ${iconClass}"></i> <span>${message}</span>`;
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 300);
-            }, 3200);
-        }
-
-        function showConfirmModal(title, message, onConfirm) {
-            const modal = document.getElementById('custom-modal');
-            document.getElementById('modal-title').textContent = title;
-            document.getElementById('modal-message').textContent = message;
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-
-            const cancelBtn = document.getElementById('modal-cancel');
-            const confirmBtn = document.getElementById('modal-confirm');
-
-            const close = () => {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            };
-
-            cancelBtn.onclick = close;
-            confirmBtn.onclick = () => {
-                close();
-                onConfirm();
-            };
-        }
-
-        // Xác định câu hỏi thuộc Chương 1, Chương 2 hay Chương 3 (để loại bỏ)
-        function classifyQuestionChapter(q) {
-            if (CH1_IDS.has(q.id)) return 1;
-            if (CH2_IDS.has(q.id)) return 2;
-
-            // Dự phòng bằng từ khóa nếu người dùng nạp file có ID mới
-            const text = (q.content || '').toLowerCase();
-            if (/đại hội\s*(iv|v|vi|vii|viii|ix|x|xi|xii|xiii|4|5|6|7|8|9|10|11|12|13)\b/i.test(text) ||
-                /1976|1979|1982|1986|1991|1996|2001|2006|2011|2016|2021|wto|asean|apec|đổi mới|công nghiệp hóa, hiện đại hóa|kinh tế thị trường định hướng/i.test(text)) {
-                return 3;
-            }
-            if (/1930|1931|1935|1936|1939|1940|1941|cương lĩnh đầu tiên|luận cương|xô viết nghệ|hội việt nam cách mạng thanh niên|nguyễn ái quốc|tân trào|khởi nghĩa tháng tám|khai thác thuộc địa/i.test(text)) {
-                return 1;
-            }
-            if (/1946|1947|1950|1951|1953|1954|1959|1960|1965|1968|1973|1975|điện biên phủ|giơ-ne-vơ|giơnevơ|mỹ - diệm|đồng khởi|chiến tranh đặc biệt|chiến tranh cục bộ|mậu thân|hiệp định sơ bộ|tạm ước|bình dân học vụ|ngàn cân treo sợi tóc/i.test(text)) {
-                return 2;
-            }
-            return 0; // Không thuộc Chương 1 & 2
-        }
-
-        // Làm sạch câu hỏi (bỏ phương án trống content: "")
-        function sanitizeQuestion(rawQ, chapter) {
-            const cleanedAnswers = (rawQ.answersList || [])
-                .filter(a => a && typeof a.content === 'string' && a.content.trim() !== '' && a.content.trim() !== '..')
-                .map((a, idx) => ({
-                    id: a.id !== undefined ? a.id : idx + 1,
-                    content: a.content.trim(),
-                    is_correct: Boolean(a.is_correct),
-                    index_order: idx + 1,
-                    question_target_id: rawQ.id
-                }));
-
-            return {
-                id: rawQ.id,
-                content: (rawQ.content || '').trim(),
-                explanation: (rawQ.explanation || '').trim(),
-                quizTargetId: rawQ.quizTargetId || 11,
-                chapter: chapter,
-                answersList: cleanedAnswers
-            };
-        }
-
-        // Xử lý danh sách câu hỏi gốc và chỉ giữ lại Chương 1 & Chương 2
-        function processRawQuestionsList(rawList, isFromUserFile = false) {
-            const processed = [];
-            for (const item of rawList) {
-                if (!item || !item.content) continue;
-                const chap = classifyQuestionChapter(item);
-                if (chap === 1 || chap === 2) {
-                    const cleanQ = sanitizeQuestion(item, chap);
-                    if (cleanQ.answersList.length >= 2) {
-                        processed.push(cleanQ);
-                    }
-                }
-            }
-
-            allQuestions = processed;
-            isFullDatasetLoaded = isFromUserFile;
-
-            // Cập nhật thông báo trạng thái
-            const statusText = document.getElementById('dataset-status-text');
-            const dropzone = document.getElementById('upload-dropzone');
-            if (isFromUserFile) {
-                statusText.textContent = `Đã nạp ${allQuestions.length} câu Chương 1 & 2 (từ file vnr202.js)`;
-                dropzone.classList.add('hidden');
-            } else {
-                statusText.textContent = `Đang dùng bộ câu hỏi mẫu (${allQuestions.length} câu)`;
-            }
-
-            updateDashboardStats();
-            applyPracticeFilter();
-            renderBankList();
-            updateExportPreview();
-        }
-
-        // ============================================================================
-        // 4. ĐỌC FILE VNR202.JS DO NGƯỜI DÙNG TẢI LÊN
-        // ============================================================================
-        function parseVnr202FileContent(fileText) {
-            try {
-                let text = fileText.trim();
-                // Tìm vị trí bắt đầu của JSON object
-                const firstBrace = text.indexOf('{');
-                const lastBrace = text.lastIndexOf('}');
-                if (firstBrace === -1 || lastBrace === -1) {
-                    throw new Error('Không tìm thấy cấu trúc đối tượng JSON trong file.');
-                }
-                const jsonString = text.substring(firstBrace, lastBrace + 1);
-                const parsedData = JSON.parse(jsonString);
-                if (!parsedData.questionsList || !Array.isArray(parsedData.questionsList)) {
-                    throw new Error('File không có mảng questionsList hợp lệ.');
-                }
-                processRawQuestionsList(parsedData.questionsList, true);
-                showToast(`Đã lọc thành công ${allQuestions.length} câu Chương 1 & 2 (loại bỏ ${parsedData.questionsList.length - allQuestions.length} câu Chương 3)!`, 'success');
-            } catch (err) {
-                console.error(err);
-                showToast('Không thể đọc file: ' + err.message, 'error');
-            }
-        }
-
-        // Sự kiện chọn file và kéo thả
-        function setupFileUploadListeners() {
-            const fileInput = document.getElementById('file-upload-input');
-            const dropzone = document.getElementById('upload-dropzone');
-
-            fileInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (ev) => parseVnr202FileContent(ev.target.result);
-                reader.readAsText(file, 'utf-8');
-            });
-
-            ['dragenter', 'dragover'].forEach(evtName => {
-                dropzone.addEventListener(evtName, (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    dropzone.classList.add('ring-4', 'ring-amber-400/50', 'bg-amber-100/60');
-                });
-            });
-
-            ['dragleave', 'drop'].forEach(evtName => {
-                dropzone.addEventListener(evtName, (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    dropzone.classList.remove('ring-4', 'ring-amber-400/50', 'bg-amber-100/60');
-                });
-            });
-
-            dropzone.addEventListener('drop', (e) => {
-                const files = e.dataTransfer.files;
-                if (files && files.length > 0) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => parseVnr202FileContent(ev.target.result);
-                    reader.readAsText(files[0], 'utf-8');
-                }
-            });
-        }
-
-        // ============================================================================
-        // 5. QUẢN LÝ TIẾN ĐỘ HỌC TẬP (LOCAL STORAGE) & THỐNG KÊ
-        // ============================================================================
-        function loadProgressFromStorage() {
-            try {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    userProgress.answered = parsed.answered || {};
-                    userProgress.starred = parsed.starred || [];
-                }
-            } catch (e) {
-                console.warn('Không thể tải tiến độ từ localStorage', e);
-            }
-        }
-
-        function saveProgressToStorage() {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(userProgress));
-            } catch (e) {
-                console.warn('Không thể lưu tiến độ vào localStorage', e);
-            }
-        }
-
-        function updateDashboardStats() {
-            const total = allQuestions.length;
-            const ch1Count = allQuestions.filter(q => q.chapter === 1).length;
-            const ch2Count = allQuestions.filter(q => q.chapter === 2).length;
-
-            let masteredCount = 0;
-            let wrongCount = 0;
-            let answeredTotal = 0;
-
-            allQuestions.forEach(q => {
-                const record = userProgress.answered[q.id];
-                if (record) {
-                    answeredTotal++;
-                    if (record.isCorrect) masteredCount++;
-                    else wrongCount++;
-                }
-            });
-
-            const starredSet = new Set(userProgress.starred);
-            const starredCount = allQuestions.filter(q => starredSet.has(q.id)).length;
-            const accuracy = answeredTotal > 0 ? Math.round((masteredCount / answeredTotal) * 100) : 0;
-
-            document.getElementById('stat-total').textContent = total;
-            document.getElementById('stat-ch1').textContent = ch1Count;
-            document.getElementById('stat-ch2').textContent = ch2Count;
-            document.getElementById('stat-mastered').textContent = masteredCount;
-            document.getElementById('stat-wrong').textContent = wrongCount;
-            document.getElementById('stat-starred').textContent = starredCount;
-            document.getElementById('stat-accuracy').textContent = `Độ chính xác: ${accuracy}%`;
-
-            // Cập nhật số lượng ở Tab Xuất File
-            document.getElementById('export-count-both').textContent = `${total} câu`;
-            document.getElementById('export-count-ch1').textContent = `${ch1Count} câu`;
-            document.getElementById('export-count-ch2').textContent = `${ch2Count} câu`;
-        }
-
-        function confirmResetProgress() {
-            showConfirmModal(
-                'Đặt lại tiến độ học tập?',
-                'Toàn bộ lịch sử các câu đã làm đúng/sai trong chế độ Luyện tập sẽ bị xóa (các câu đánh dấu sao vẫn được giữ nguyên).',
-                () => {
-                    userProgress.answered = {};
-                    saveProgressToStorage();
-                    updateDashboardStats();
-                    applyPracticeFilter();
-                    showToast('Đã đặt lại lịch sử làm bài!', 'warning');
-                }
-            );
-        }
-
-        // ============================================================================
-        // 6. CHẾ ĐỘ LUYỆN TẬP TỪNG CÂU (PRACTICE MODE)
-        // ============================================================================
-        function applyPracticeFilter() {
-            const filterValue = document.getElementById('practice-filter').value;
-            const starredSet = new Set(userProgress.starred);
-
-            let list = allQuestions.filter(q => {
-                if (filterValue === 'ch1') return q.chapter === 1;
-                if (filterValue === 'ch2') return q.chapter === 2;
-                if (filterValue === 'unanswered') return !userProgress.answered[q.id];
-                if (filterValue === 'wrong') return userProgress.answered[q.id] && !userProgress.answered[q.id].isCorrect;
-                if (filterValue === 'starred') return starredSet.has(q.id);
-                return true;
-            });
-
-            if (shuffleQuestions) {
-                list = [...list].sort(() => Math.random() - 0.5);
-            }
-
-            filteredQuestions = list;
-            currentIndex = 0;
-            renderCurrentPracticeQuestion();
-            renderQuestionPalette();
-        }
-
-        function toggleShuffleQuestions() {
-            shuffleQuestions = !shuffleQuestions;
-            const btn = document.getElementById('btn-shuffle-q');
-            if (shuffleQuestions) {
-                btn.classList.add('bg-party-50', 'border-party-600', 'text-party-700');
-                showToast('Đã bật xáo trộn thứ tự câu hỏi');
-            } else {
-                btn.classList.remove('bg-party-50', 'border-party-600', 'text-party-700');
-                showToast('Đã tắt xáo trộn câu hỏi');
-            }
-            applyPracticeFilter();
-        }
-
-        function toggleShuffleAnswers() {
-            shuffleAnswers = !shuffleAnswers;
-            const btn = document.getElementById('btn-shuffle-a');
-            if (shuffleAnswers) {
-                btn.classList.add('bg-party-50', 'border-party-600', 'text-party-700');
-                showToast('Đã bật xáo trộn thứ tự đáp án');
-            } else {
-                btn.classList.remove('bg-party-50', 'border-party-600', 'text-party-700');
-                showToast('Đã tắt xáo trộn đáp án');
-            }
-            renderCurrentPracticeQuestion();
-        }
-
-        function renderCurrentPracticeQuestion() {
-            const contentEl = document.getElementById('q-content');
-            const answersEl = document.getElementById('q-answers');
-            const feedbackEl = document.getElementById('q-feedback');
-            const indexBadge = document.getElementById('q-index-badge');
-            const chapterBadge = document.getElementById('q-chapter-badge');
-            const idBadge = document.getElementById('q-id-badge');
-            const starBtn = document.getElementById('btn-star-current');
-
-            if (filteredQuestions.length === 0) {
-                indexBadge.textContent = '0 / 0';
-                chapterBadge.textContent = 'Trống';
-                idBadge.textContent = '';
-                contentEl.textContent = 'Không có câu hỏi nào trong bộ lọc này. Hãy chọn phạm vi khác trên thanh công cụ!';
-                answersEl.innerHTML = '';
-                feedbackEl.classList.add('hidden');
-                return;
-            }
-
-            const q = filteredQuestions[currentIndex];
-            indexBadge.textContent = `Câu ${currentIndex + 1} / ${filteredQuestions.length}`;
-            chapterBadge.textContent = q.chapter === 1 ? 'Chương 1 (1930-1945)' : 'Chương 2 (1945-1975)';
-            chapterBadge.className = q.chapter === 1
-                ? 'px-2.5 py-1 rounded-lg bg-red-50 text-party-700 font-semibold text-xs border border-red-200'
-                : 'px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 font-semibold text-xs border border-amber-200';
-            idBadge.textContent = `ID: #${q.id}`;
-
-            // Star status
-            const isStarred = userProgress.starred.includes(q.id);
-            starBtn.innerHTML = isStarred
-                ? '<i class="fa-solid fa-star text-amber-400"></i>'
-                : '<i class="fa-regular fa-star"></i>';
-
-            contentEl.textContent = q.content;
-
-            // Chuẩn bị danh sách đáp án
-            let answers = [...q.answersList];
-            if (shuffleAnswers) {
-                answers.sort((a, b) => ((a.id * 31 + q.id) % 7) - ((b.id * 31 + q.id) % 7));
-            }
-
-            const existingRecord = userProgress.answered[q.id];
-            const labels = ['A', 'B', 'C', 'D', 'E', 'F'];
-
-            answersEl.innerHTML = '';
-            answers.forEach((ans, idx) => {
-                const letter = labels[idx] || String(idx + 1);
-                const btn = document.createElement('button');
-                btn.type = 'button';
-
-                let baseStyle = 'border-slate-200 bg-slate-50/70 hover:bg-white hover:border-party-600 text-slate-800';
-                let badgeStyle = 'bg-white border border-slate-300 text-slate-700';
-                let statusIcon = '';
-
-                if (existingRecord) {
-                    if (ans.is_correct) {
-                        baseStyle = 'border-emerald-500 bg-emerald-50/90 text-emerald-950 font-semibold shadow-sm';
-                        badgeStyle = 'bg-emerald-600 text-white border-emerald-600';
-                        statusIcon = '<i class="fa-solid fa-circle-check text-emerald-600 text-lg ml-auto shrink-0"></i>';
-                    } else if (existingRecord.selectedId === ans.id && !ans.is_correct) {
-                        baseStyle = 'border-rose-500 bg-rose-50/90 text-rose-950';
-                        badgeStyle = 'bg-rose-600 text-white border-rose-600';
-                        statusIcon = '<i class="fa-solid fa-circle-xmark text-rose-600 text-lg ml-auto shrink-0"></i>';
-                    } else {
-                        baseStyle = 'border-slate-200 bg-slate-50/40 text-slate-400 opacity-75';
-                    }
-                }
-
-                btn.className = `answer-option w-full text-left p-3.5 sm:p-4 rounded-xl border-2 flex items-start gap-3.5 ${baseStyle}`;
-                btn.innerHTML = `
-                    <span class="w-7 h-7 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeStyle}">${letter}</span>
-                    <span class="text-sm sm:text-base leading-relaxed flex-1">${ans.content}</span>
-                    ${statusIcon}
-                `;
-
-                btn.onclick = () => selectPracticeAnswer(q, ans);
-                answersEl.appendChild(btn);
-            });
-
-            // Hiển thị giải thích nếu đã trả lời
-            if (existingRecord) {
-                const correctAns = q.answersList.find(a => a.is_correct);
-                feedbackEl.classList.remove('hidden');
-                if (existingRecord.isCorrect) {
-                    feedbackEl.className = 'mt-5 p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-900 text-xs sm:text-sm';
-                    feedbackEl.innerHTML = `<div class="font-bold flex items-center gap-2"><i class="fa-solid fa-check-double text-emerald-600"></i> Chính xác!</div>
-                        <div class="mt-1 text-emerald-800">Đáp án đúng: <strong>${correctAns ? correctAns.content : ''}</strong></div>`;
-                } else {
-                    feedbackEl.className = 'mt-5 p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-900 text-xs sm:text-sm';
-                    feedbackEl.innerHTML = `<div class="font-bold flex items-center gap-2"><i class="fa-solid fa-circle-exclamation text-rose-600"></i> Chưa chính xác!</div>
-                        <div class="mt-1 text-rose-800">Đáp án đúng phải là: <strong>${correctAns ? correctAns.content : ''}</strong></div>`;
-                }
-            } else {
-                feedbackEl.classList.add('hidden');
-            }
-
-            // Nút điều hướng
-            document.getElementById('btn-prev').disabled = currentIndex === 0;
-            document.getElementById('btn-next').disabled = currentIndex >= filteredQuestions.length - 1;
-
-            highlightCurrentInPalette();
-        }
-
-        function selectPracticeAnswer(question, selectedAns) {
-            const hasCorrectFlag = question.answersList.some(a => a.is_correct);
-            const isCorrect = hasCorrectFlag ? Boolean(selectedAns.is_correct) : true;
-
-            userProgress.answered[question.id] = {
-                selectedId: selectedAns.id,
-                isCorrect: isCorrect
-            };
-
-            saveProgressToStorage();
-            updateDashboardStats();
-            renderCurrentPracticeQuestion();
-            renderQuestionPalette();
-        }
-
-        function prevQuestion() {
-            if (currentIndex > 0) {
-                currentIndex--;
-                renderCurrentPracticeQuestion();
-            }
-        }
-
-        function nextQuestion() {
-            if (currentIndex < filteredQuestions.length - 1) {
-                currentIndex++;
-                renderCurrentPracticeQuestion();
-            }
-        }
-
-        function toggleStarCurrent() {
-            if (filteredQuestions.length === 0) return;
-            const q = filteredQuestions[currentIndex];
-            const idx = userProgress.starred.indexOf(q.id);
-            if (idx === -1) {
-                userProgress.starred.push(q.id);
-                showToast('Đã thêm câu hỏi vào mục Đánh dấu sao ★');
-            } else {
-                userProgress.starred.splice(idx, 1);
-                showToast('Đã bỏ đánh dấu sao');
-            }
-            saveProgressToStorage();
-            updateDashboardStats();
-            renderCurrentPracticeQuestion();
-            renderQuestionPalette();
-        }
-
-        function renderQuestionPalette() {
-            const paletteEl = document.getElementById('question-palette');
-            const progressText = document.getElementById('palette-progress-text');
-            paletteEl.innerHTML = '';
-
-            let doneInFilter = 0;
-            const starredSet = new Set(userProgress.starred);
-
-            filteredQuestions.forEach((q, idx) => {
-                const record = userProgress.answered[q.id];
-                if (record) doneInFilter++;
-
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.dataset.paletteIdx = idx;
-
-                let colorClass = 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200';
-                if (record) {
-                    colorClass = record.isCorrect
-                        ? 'bg-emerald-500 text-white font-bold border-emerald-600'
-                        : 'bg-rose-500 text-white font-bold border-rose-600';
-                }
-
-                const starRing = starredSet.has(q.id) ? 'ring-2 ring-amber-400' : '';
-                const activeRing = idx === currentIndex ? 'ring-2 ring-slate-900 scale-105' : '';
-
-                btn.className = `h-9 rounded-lg text-xs font-semibold transition flex items-center justify-center ${colorClass} ${starRing} ${activeRing}`;
-                btn.textContent = idx + 1;
-                btn.onclick = () => {
-                    currentIndex = idx;
-                    renderCurrentPracticeQuestion();
-                };
-                paletteEl.appendChild(btn);
-            });
-
-            progressText.textContent = `${doneInFilter}/${filteredQuestions.length} đã làm`;
-        }
-
-        function highlightCurrentInPalette() {
-            const buttons = document.querySelectorAll('#question-palette button');
-            buttons.forEach((b, idx) => {
-                if (idx === currentIndex) {
-                    b.classList.add('ring-2', 'ring-slate-900', 'scale-105');
-                } else {
-                    b.classList.remove('ring-2', 'ring-slate-900', 'scale-105');
-                }
-            });
-        }
-
-        // Hỗ trợ bàn phím cho chế độ Luyện tập
-        window.addEventListener('keydown', (e) => {
-            const practiceVisible = !document.getElementById('view-practice').classList.contains('hidden');
-            if (!practiceVisible) return;
-            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
-
-            if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                nextQuestion();
-            } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                prevQuestion();
-            } else if (e.key.toLowerCase() === 's') {
-                e.preventDefault();
-                toggleStarCurrent();
-            } else if (['1', '2', '3', '4', 'a', 'b', 'c', 'd'].includes(e.key.toLowerCase())) {
-                const map = { '1': 0, 'a': 0, '2': 1, 'b': 1, '3': 2, 'c': 2, '4': 3, 'd': 3 };
-                const idx = map[e.key.toLowerCase()];
-                const optionButtons = document.querySelectorAll('#q-answers button');
-                if (optionButtons[idx]) {
-                    optionButtons[idx].click();
-                }
-            }
-        });
-
-        // ============================================================================
-        // 7. CHẾ ĐỘ THI THỬ (EXAM MODE)
-        // ============================================================================
-        function startExam() {
-            const scope = document.getElementById('exam-scope').value;
-            const count = parseInt(document.getElementById('exam-count').value, 10);
-            const durationMinutes = parseInt(document.getElementById('exam-duration').value, 10);
-
-            let pool = allQuestions.filter(q => {
-                if (scope === 'ch1') return q.chapter === 1;
-                if (scope === 'ch2') return q.chapter === 2;
-                return true;
-            });
-
-            if (pool.length === 0) {
-                showToast('Không có câu hỏi nào trong phạm vi đã chọn!', 'error');
-                return;
-            }
-
-            const shuffled = [...pool].sort(() => Math.random() - 0.5);
-            examQuestions = shuffled.slice(0, Math.min(count, shuffled.length));
-            examUserSelections = {};
-            isExamSubmitted = false;
-
-            document.getElementById('exam-setup').classList.add('hidden');
-            document.getElementById('exam-active').classList.remove('hidden');
-            document.getElementById('exam-result-banner').classList.add('hidden');
-
-            examRemainingSeconds = durationMinutes * 60;
-            updateExamTimerDisplay();
-            if (examTimerInterval) clearInterval(examTimerInterval);
-            examTimerInterval = setInterval(() => {
-                examRemainingSeconds--;
-                updateExamTimerDisplay();
-                if (examRemainingSeconds <= 0) {
-                    clearInterval(examTimerInterval);
-                    showToast('Đã hết thời gian làm bài! Hệ thống tự động chấm điểm.', 'warning');
-                    finalizeExamGrading();
-                }
-            }, 1000);
-
-            renderExamQuestionsList();
-            updateExamProgressLabel();
-        }
-
-        function updateExamTimerDisplay() {
-            const mins = Math.floor(examRemainingSeconds / 60);
-            const secs = examRemainingSeconds % 60;
-            document.getElementById('exam-timer').textContent =
-                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-        }
-
-        function updateExamProgressLabel() {
-            const answeredCount = Object.keys(examUserSelections).length;
-            document.getElementById('exam-progress-label').textContent =
-                `Đã chọn ${answeredCount} / ${examQuestions.length} câu`;
-        }
-
-        function renderExamQuestionsList() {
-            const container = document.getElementById('exam-questions-list');
-            container.innerHTML = '';
-            const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
-
-            examQuestions.forEach((q, qIdx) => {
-                const card = document.createElement('div');
-                card.className = 'bg-white rounded-2xl border border-slate-200 shadow-sm p-5';
-
-                const selectedAnsId = examUserSelections[q.id];
-                let optionsHtml = '';
-
-                q.answersList.forEach((ans, aIdx) => {
-                    const letter = letters[aIdx] || String(aIdx + 1);
-                    const isSelected = selectedAnsId === ans.id;
-
-                    let style = isSelected
-                        ? 'border-party-600 bg-red-50/70 text-slate-900 font-semibold'
-                        : 'border-slate-200 bg-slate-50/60 hover:bg-white text-slate-800';
-
-                    if (isExamSubmitted) {
-                        if (ans.is_correct) {
-                            style = 'border-emerald-500 bg-emerald-50 text-emerald-950 font-bold';
-                        } else if (isSelected && !ans.is_correct) {
-                            style = 'border-rose-500 bg-rose-50 text-rose-950 line-through';
-                        }
-                    }
-
-                    optionsHtml += `
-                        <button type="button" ${isExamSubmitted ? 'disabled' : ''} onclick="selectExamOption(${q.id}, ${ans.id})"
-                            class="w-full text-left p-3.5 rounded-xl border-2 transition flex items-start gap-3 ${style}">
-                            <span class="w-6 h-6 rounded-md bg-white border border-slate-300 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">${letter}</span>
-                            <span class="text-sm flex-1">${ans.content}</span>
-                        </button>
-                    `;
-                });
-
-                card.innerHTML = `
-                    <div class="flex items-center justify-between gap-2 mb-3">
-                        <span class="px-2.5 py-1 rounded-lg bg-slate-900 text-white font-bold text-xs">Câu ${qIdx + 1}</span>
-                        <span class="text-xs font-semibold ${q.chapter === 1 ? 'text-party-700' : 'text-amber-700'}">
-                            ${q.chapter === 1 ? 'Chương 1 (1930-1945)' : 'Chương 2 (1945-1975)'}
-                        </span>
-                    </div>
-                    <h4 class="font-bold text-slate-900 text-sm sm:text-base mb-4">${q.content}</h4>
-                    <div class="space-y-2.5">${optionsHtml}</div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function selectExamOption(questionId, answerId) {
-            if (isExamSubmitted) return;
-            examUserSelections[questionId] = answerId;
-            updateExamProgressLabel();
-            renderExamQuestionsList();
-        }
-
-        function submitExam() {
-            if (isExamSubmitted) return;
-            const answeredCount = Object.keys(examUserSelections).length;
-            if (answeredCount < examQuestions.length) {
-                showConfirmModal(
-                    'Nộp bài sớm?',
-                    `Bạn mới trả lời ${answeredCount}/${examQuestions.length} câu. Bạn có chắc chắn muốn nộp bài và chấm điểm ngay không?`,
-                    finalizeExamGrading
-                );
-            } else {
-                finalizeExamGrading();
-            }
-        }
-
-        function finalizeExamGrading() {
-            if (examTimerInterval) clearInterval(examTimerInterval);
-            isExamSubmitted = true;
-
-            let correctCount = 0;
-            examQuestions.forEach(q => {
-                const chosenId = examUserSelections[q.id];
-                const correctAns = q.answersList.find(a => a.is_correct);
-                const isCorrect = Boolean(correctAns && chosenId === correctAns.id);
-                if (isCorrect) correctCount++;
-
-                // Lưu vào tiến độ chung nếu người dùng đã chọn đáp án
-                if (chosenId !== undefined) {
-                    userProgress.answered[q.id] = { selectedId: chosenId, isCorrect };
-                }
-            });
-
-            saveProgressToStorage();
-            updateDashboardStats();
-
-            const score10 = ((correctCount / examQuestions.length) * 10).toFixed(2);
-            const banner = document.getElementById('exam-result-banner');
-            banner.classList.remove('hidden');
-            banner.innerHTML = `
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div>
-                        <span class="px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-800 font-bold text-xs uppercase">Kết quả bài thi</span>
-                        <h3 class="text-2xl font-black text-slate-900 mt-1">Điểm số: <span class="text-emerald-600">${score10} / 10</span> (${correctCount}/${examQuestions.length} câu đúng)</h3>
-                        <p class="text-xs sm:text-sm text-slate-600 mt-1">Hãy cuộn xuống dưới để xem chi tiết đáp án đúng (màu xanh) và các câu cần lưu ý.</p>
-                    </div>
-                    <button onclick="cancelExam()" class="px-4 py-2.5 rounded-xl bg-party-600 hover:bg-party-700 text-white font-bold text-xs sm:text-sm transition shrink-0">
-                        <i class="fa-solid fa-rotate-right mr-1"></i> Tạo đề thi mới
-                    </button>
-                </div>
-            `;
-
-            renderExamQuestionsList();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function cancelExam() {
-            if (examTimerInterval) clearInterval(examTimerInterval);
-            document.getElementById('exam-active').classList.add('hidden');
-            document.getElementById('exam-setup').classList.remove('hidden');
-        }
-
-        // ============================================================================
-        // 8. TRA CỨU NGÂN HÀNG CÂU HỎI (BANK SEARCH MODE)
-        // ============================================================================
-        function renderBankList() {
-            const keyword = (document.getElementById('bank-search-input').value || '').trim().toLowerCase();
-            const chapFilter = document.getElementById('bank-chapter-filter').value;
-            const container = document.getElementById('bank-list-container');
-            const countLabel = document.getElementById('bank-count-label');
-
-            const matches = allQuestions.filter(q => {
-                if (chapFilter !== 'all' && String(q.chapter) !== chapFilter) return false;
-                if (!keyword) return true;
-                const inQ = q.content.toLowerCase().includes(keyword);
-                const inA = q.answersList.some(a => a.content.toLowerCase().includes(keyword));
-                return inQ || inA || String(q.id).includes(keyword);
-            });
-
-            countLabel.textContent = `Tìm thấy ${matches.length} câu`;
-            container.innerHTML = '';
-
-            const displaySlice = matches.slice(0, 120); // Giới hạn render mượt
-            const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
-
-            displaySlice.forEach((q, idx) => {
-                const item = document.createElement('div');
-                item.className = 'bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm';
-
-                const answersHtml = q.answersList.map((a, aIdx) => {
-                    const letter = letters[aIdx] || String(aIdx + 1);
-                    if (a.is_correct) {
-                        return `<div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-950 text-xs sm:text-sm font-semibold flex items-center gap-2">
-                            <span class="w-5 h-5 rounded bg-emerald-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0">${letter}</span>
-                            <span>${a.content}</span>
-                            <i class="fa-solid fa-check text-emerald-600 ml-auto"></i>
-                        </div>`;
-                    }
-                    return `<div class="p-2 rounded-xl bg-slate-50 text-slate-600 text-xs sm:text-sm flex items-center gap-2">
-                        <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 text-[11px] font-bold flex items-center justify-center shrink-0">${letter}</span>
-                        <span>${a.content}</span>
-                    </div>`;
-                }).join('');
-
-                item.innerHTML = `
-                    <div class="flex items-center justify-between gap-2 mb-2">
-                        <span class="text-xs font-bold text-slate-400">#${idx + 1} (ID: ${q.id})</span>
-                        <span class="px-2.5 py-0.5 rounded-md text-xs font-semibold ${q.chapter === 1 ? 'bg-red-50 text-party-700' : 'bg-amber-50 text-amber-700'}">
-                            Chương ${q.chapter}
-                        </span>
-                    </div>
-                    <h4 class="font-bold text-slate-900 text-sm sm:text-base mb-3">${q.content}</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${answersHtml}</div>
-                `;
-                container.appendChild(item);
-            });
-        }
-
-        // ============================================================================
-        // 9. XUẤT FILE JS ĐÃ LỌC CHUẨN ĐỊNH DẠNG (EXPORT FILTERED JS)
-        // ============================================================================
-        function buildExportObject(mode = 'both') {
-            let list = allQuestions;
-            let nameSuffix = 'Chương 1 & 2';
-            if (mode === 'ch1') {
-                list = allQuestions.filter(q => q.chapter === 1);
-                nameSuffix = 'Chương 1 (1930-1945)';
-            } else if (mode === 'ch2') {
-                list = allQuestions.filter(q => q.chapter === 2);
-                nameSuffix = 'Chương 2 (1945-1975)';
-            }
-
-            return {
-                id: 11,
-                code: 'VNR202',
-                name: `Lịch sử Đảng ĐCSVN (${nameSuffix})`,
-                subjectTargetId: 11,
-                questionsList: list.map(q => ({
-                    id: q.id,
-                    content: q.content,
-                    explanation: q.explanation,
-                    quizTargetId: q.quizTargetId || 11,
-                    chapter: q.chapter,
-                    answersList: q.answersList
-                }))
-            };
-        }
-
-        function updateExportPreview() {
-            const exportObj = buildExportObject('both');
-            const jsCode = `window.VNR202_DATA = ${JSON.stringify(exportObj, null, 2)};\n`;
-            const previewEl = document.getElementById('export-preview-box');
-            if (previewEl) {
-                previewEl.value = jsCode;
-            }
-        }
-
-        function downloadFilteredJS(mode = 'both') {
-            const exportObj = buildExportObject(mode);
-            const jsCode = `window.VNR202_DATA = ${JSON.stringify(exportObj, null, 2)};\n`;
-
-            const fileNameMap = {
-                both: 'vnr202_chuong1_2.js',
-                ch1: 'vnr202_chuong1.js',
-                ch2: 'vnr202_chuong2.js'
-            };
-
-            const blob = new Blob([jsCode], { type: 'application/javascript;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileNameMap[mode] || 'vnr202_filtered.js';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            showToast(`Đã tải xuống tệp ${a.download} (${exportObj.questionsList.length} câu hỏi)!`);
-        }
-
-        function copyExportPreview() {
-            const previewEl = document.getElementById('export-preview-box');
-            previewEl.select();
-            document.execCommand('copy');
-            showToast('Đã sao chép toàn bộ mã JS vào bộ nhớ tạm!');
-        }
-
-        // ============================================================================
-        // 10. CHUYỂN ĐỔI TAB GIAO DIỆN & KHỞI TẠO
-        // ============================================================================
-        function switchTab(tabName) {
-            const tabs = ['practice', 'exam', 'bank', 'export'];
-            tabs.forEach(t => {
-                const view = document.getElementById(`view-${t}`);
-                const btn = document.getElementById(`tab-${t}`);
-                if (t === tabName) {
-                    view.classList.remove('hidden');
-                    btn.className = 'nav-tab px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap bg-white text-party-800 shadow-sm';
-                } else {
-                    view.classList.add('hidden');
-                    btn.className = 'nav-tab px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap text-red-100 hover:bg-white/10';
-                }
-            });
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            loadProgressFromStorage();
-            setupFileUploadListeners();
-
-            // Nếu người dùng nhúng sẵn file vnr202.js qua thẻ <script> thì tự động nhận diện
-            if (window.VNR202_DATA && Array.isArray(window.VNR202_DATA.questionsList)) {
-                processRawQuestionsList(window.VNR202_DATA.questionsList, true);
-            } else {
-                processRawQuestionsList(BUILTIN_SAMPLE_QUESTIONS, false);
-            }
-        });
-    </script>
 </body>
+
 </html>
