@@ -235,6 +235,34 @@ function sanitizeAndRepairQuestion(rawQ, chapter) {
         }
     }
 
+    // Áp dụng bộ vá câu hỏi đặc thù (các câu bị lỗi phương án / câu hỏi chọn nhiều đáp án)
+    if (typeof QUESTION_SPECIFIC_PATCHES !== 'undefined' && QUESTION_SPECIFIC_PATCHES[rawQ.id]) {
+        const patch = QUESTION_SPECIFIC_PATCHES[rawQ.id];
+        if (patch.content) stem = patch.content;
+        if (patch.explanation) rawQ.explanation = patch.explanation;
+        if (patch.answersList) {
+            cleanedAnswers.length = 0;
+            patch.answersList.forEach((a, i) => {
+                cleanedAnswers.push({
+                    id: a.id !== undefined ? a.id : i + 1,
+                    content: a.content,
+                    is_correct: Boolean(a.is_correct),
+                    index_order: i + 1,
+                    question_target_id: rawQ.id
+                });
+            });
+        }
+        if (patch.correctAnswerIds) {
+            cleanedAnswers.forEach(a => {
+                a.is_correct = patch.correctAnswerIds.has(a.id);
+            });
+        }
+        wasRepaired = true;
+    }
+
+    const correctCount = cleanedAnswers.filter(a => a.is_correct).length;
+    const isMultiChoice = correctCount > 1;
+
     const qObj = {
         id: rawQ.id,
         content: stem,
@@ -242,6 +270,8 @@ function sanitizeAndRepairQuestion(rawQ, chapter) {
         quizTargetId: rawQ.quizTargetId || 11,
         chapter: chapter,
         answersList: cleanedAnswers,
+        isMultiChoice,
+        correctCount,
         wasRepaired
     };
     qObj.subtopic = classifySubtopic(qObj, chapter);

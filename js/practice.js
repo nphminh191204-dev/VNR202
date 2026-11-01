@@ -1,17 +1,20 @@
 /**
- * VNR202 - Chế độ học trắc nghiệm & Lật thẻ Flashcard (Practice Engine)
+ * VNR202 - Chế độ Luyện tập trắc nghiệm & Flashcard 3D (Practice Engine)
  */
 
-function selectSubtopic(topicCode) {
-    currentSubtopic = topicCode;
+let practiceMultiSelections = new Set();
+
+function selectSubtopic(topic) {
+    currentSubtopic = topic;
+    practiceMultiSelections.clear();
     updateSubtopicPillsUI();
     applyPracticeFilter();
 }
 
 function updateSubtopicPillsUI() {
-    const buttons = document.querySelectorAll('#subtopic-pills .topic-pill');
-    buttons.forEach(btn => {
-        if (btn.dataset.topic === currentSubtopic) {
+    document.querySelectorAll('#subtopic-pills .topic-pill').forEach(btn => {
+        const t = btn.getAttribute('data-topic');
+        if (t === currentSubtopic) {
             btn.className = 'topic-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-party-600 text-white shadow-sm transition';
         } else {
             btn.className = 'topic-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-slate-700 transition';
@@ -51,6 +54,7 @@ function applyPracticeFilter() {
     const filterEl = document.getElementById('practice-filter');
     const filterValue = filterEl ? filterEl.value : 'all';
     const starredSet = new Set(userProgress.starred || []);
+    practiceMultiSelections.clear();
 
     let list = allQuestions.filter(q => {
         if (currentSubtopic !== 'all' && q.subtopic !== currentSubtopic) return false;
@@ -86,10 +90,10 @@ function toggleAutoAdvance() {
     if (btn) {
         if (autoAdvance) {
             btn.classList.add('bg-emerald-50', 'dark:bg-emerald-950/60', 'border-emerald-500', 'text-emerald-700', 'dark:text-emerald-300');
-            if (typeof showToast === 'function') showToast('Đã bật Tự qua câu sau 0.8s khi chọn đúng!');
+            if (typeof showToast === 'function') showToast('Đã BẬT tự động chuyển câu tiếp theo khi chọn đúng');
         } else {
             btn.classList.remove('bg-emerald-50', 'dark:bg-emerald-950/60', 'border-emerald-500', 'text-emerald-700', 'dark:text-emerald-300');
-            if (typeof showToast === 'function') showToast('Đã tắt Tự qua câu');
+            if (typeof showToast === 'function') showToast('Đã TẮT tự động chuyển câu');
         }
     }
 }
@@ -99,11 +103,11 @@ function toggleShuffleAnswers() {
     const btn = document.getElementById('btn-shuffle-a');
     if (btn) {
         if (shuffleAnswers) {
-            btn.classList.add('bg-party-50', 'dark:bg-red-950/60', 'border-party-600', 'text-party-700', 'dark:text-red-300');
-            if (typeof showToast === 'function') showToast('Đã bật Đảo vị trí đáp án A-B-C-D');
+            btn.classList.add('bg-amber-50', 'dark:bg-amber-950/60', 'border-amber-500', 'text-amber-700', 'dark:text-amber-300');
+            if (typeof showToast === 'function') showToast('Đã BẬT đảo vị trí các phương án A-D');
         } else {
-            btn.classList.remove('bg-party-50', 'dark:bg-red-950/60', 'border-party-600', 'text-party-700', 'dark:text-red-300');
-            if (typeof showToast === 'function') showToast('Đã giữ nguyên thứ tự đáp án gốc');
+            btn.classList.remove('bg-amber-50', 'dark:bg-amber-950/60', 'border-amber-500', 'text-amber-700', 'dark:text-amber-300');
+            if (typeof showToast === 'function') showToast('Đã TẮT đảo đáp án');
         }
     }
     renderCurrentPracticeQuestion();
@@ -137,7 +141,7 @@ function renderCurrentPracticeQuestion() {
     const indexBadge = document.getElementById('q-index-badge');
     const chapterBadge = document.getElementById('q-chapter-badge');
     const topicBadge = document.getElementById('q-topic-badge');
-    const repairedBadge = document.getElementById('q-repaired-badge');
+    const typeBadge = document.getElementById('q-type-badge');
     const idBadge = document.getElementById('q-id-badge');
     const masteryPill = document.getElementById('q-mastery-pill');
     const starBtn = document.getElementById('btn-star-current');
@@ -151,6 +155,7 @@ function renderCurrentPracticeQuestion() {
         contentEl.textContent = 'Không có câu hỏi nào trong bộ lọc hiện tại. Hãy chọn chuyên đề hoặc trạng thái khác!';
         answersEl.innerHTML = '';
         if (feedbackEl) feedbackEl.classList.add('hidden');
+        if (typeBadge) typeBadge.classList.add('hidden');
         return;
     }
 
@@ -162,21 +167,13 @@ function renderCurrentPracticeQuestion() {
     if (topicBadge) topicBadge.textContent = subtopicNames[q.subtopic] || 'Chuyên đề';
     if (idBadge) idBadge.textContent = `ID: #${q.id}`;
 
-    if (repairedBadge) {
-        if (q.wasRepaired) repairedBadge.classList.remove('hidden');
-        else repairedBadge.classList.add('hidden');
-    }
-
-    const dupBadge = document.getElementById('q-duplicate-badge');
-    if (dupBadge) {
-        if (q.hasDuplicates || (duplicateGroupsMap && duplicateGroupsMap.has(q.id))) {
-            const dupList = duplicateGroupsMap && duplicateGroupsMap.has(q.id) ? duplicateGroupsMap.get(q.id) : [];
-            const dupCount = dupList.length || q.duplicateCount || 1;
-            dupBadge.textContent = `🔁 Gộp ${dupCount} câu trùng`;
-            dupBadge.title = `Câu này xuất hiện ${dupCount + 1} lần trong đề thi gốc (ID: #${q.id}${dupList.length ? ', ' + dupList.map(d => '#' + d.id).join(', ') : ''}), hệ thống đã tự động gộp lại.`;
-            dupBadge.classList.remove('hidden');
+    // Hiển thị huy hiệu dạng câu hỏi (chọn nhiều đáp án)
+    if (typeBadge) {
+        if (q.isMultiChoice) {
+            typeBadge.textContent = `☑️ Chọn ${q.correctCount} đáp án`;
+            typeBadge.classList.remove('hidden');
         } else {
-            dupBadge.classList.add('hidden');
+            typeBadge.classList.add('hidden');
         }
     }
 
@@ -210,7 +207,6 @@ function renderCurrentPracticeQuestion() {
     contentEl.innerHTML = highlightFn(q.content);
 
     // Đồng bộ nội dung cho Flashcard
-    const correctAnsObj = (q.answersList || []).find(a => a.is_correct) || (q.answersList && q.answersList[0]);
     const fcFrontBadge = document.getElementById('fc-front-badge');
     const fcQuestionText = document.getElementById('fc-question-text');
     const fcAnswerText = document.getElementById('fc-answer-text');
@@ -219,7 +215,22 @@ function renderCurrentPracticeQuestion() {
 
     if (fcFrontBadge) fcFrontBadge.textContent = `Câu ${currentIndex + 1} / ${filteredQuestions.length} • ${subtopicNames[q.subtopic] || ''}`;
     if (fcQuestionText) fcQuestionText.innerHTML = highlightFn(q.content);
-    if (fcAnswerText) fcAnswerText.textContent = correctAnsObj ? correctAnsObj.content : '';
+
+    if (fcAnswerText) {
+        if (q.isMultiChoice) {
+            const correctList = (q.answersList || []).filter(a => a.is_correct);
+            fcAnswerText.innerHTML = `
+                <div class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 mb-2">Gồm ${correctList.length} đáp án đúng:</div>
+                <div class="space-y-1.5 text-sm sm:text-base font-bold text-emerald-950 dark:text-emerald-100 text-left max-w-lg mx-auto">
+                    ${correctList.map(a => `<div class="flex items-start gap-2"><i class="fa-solid fa-circle-check text-emerald-600 mt-1 shrink-0"></i> <span>${a.content}</span></div>`).join('')}
+                </div>
+            `;
+        } else {
+            const correctAnsObj = (q.answersList || []).find(a => a.is_correct) || (q.answersList && q.answersList[0]);
+            fcAnswerText.textContent = correctAnsObj ? correctAnsObj.content : '';
+        }
+    }
+
     if (fcExplanationText) fcExplanationText.textContent = q.explanation || '';
     if (fcInner) fcInner.classList.remove('flipped');
 
@@ -233,52 +244,152 @@ function renderCurrentPracticeQuestion() {
     const labels = ['A', 'B', 'C', 'D', 'E', 'F'];
 
     answersEl.innerHTML = '';
-    answers.forEach((ans, idx) => {
-        const letter = labels[idx] || String(idx + 1);
-        const btn = document.createElement('button');
-        btn.type = 'button';
 
-        let baseStyle = 'border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-800 hover:border-party-600 text-slate-800 dark:text-slate-100';
-        let badgeStyle = 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300';
-        let statusIcon = '';
+    if (q.isMultiChoice) {
+        // ==================== CÂU HỎI CHỌN NHIỀU ĐÁP ÁN (MULTI-CHOICE) ====================
+        const chosenSet = existingRecord ? new Set(existingRecord.selectedIds || [existingRecord.selectedId]) : null;
 
-        if (existingRecord) {
-            if (ans.is_correct) {
-                baseStyle = 'border-emerald-500 bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-950 dark:text-emerald-100 font-semibold shadow-sm';
-                badgeStyle = 'bg-emerald-600 text-white border-emerald-600';
-                statusIcon = '<i class="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400 text-lg ml-auto shrink-0"></i>';
-            } else if (existingRecord.selectedId === ans.id && !ans.is_correct) {
-                baseStyle = 'border-rose-500 bg-rose-50/90 dark:bg-rose-950/50 text-rose-950 dark:text-rose-100';
-                badgeStyle = 'bg-rose-600 text-white border-rose-600';
-                statusIcon = '<i class="fa-solid fa-circle-xmark text-rose-600 dark:text-rose-400 text-lg ml-auto shrink-0"></i>';
+        answers.forEach((ans, idx) => {
+            const letter = labels[idx] || String(idx + 1);
+            const btn = document.createElement('button');
+            btn.type = 'button';
+
+            let baseStyle = '';
+            let badgeStyle = '';
+            let checkIcon = '';
+
+            if (existingRecord) {
+                // Đã nộp bài / trả lời
+                if (ans.is_correct) {
+                    baseStyle = 'border-emerald-500 bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-950 dark:text-emerald-100 font-semibold shadow-sm';
+                    badgeStyle = 'bg-emerald-600 text-white border-emerald-600';
+                    checkIcon = '<i class="fa-solid fa-square-check text-emerald-600 dark:text-emerald-400 text-xl ml-auto shrink-0"></i>';
+                } else if (chosenSet.has(ans.id) && !ans.is_correct) {
+                    baseStyle = 'border-rose-500 bg-rose-50/90 dark:bg-rose-950/50 text-rose-950 dark:text-rose-100';
+                    badgeStyle = 'bg-rose-600 text-white border-rose-600';
+                    checkIcon = '<i class="fa-solid fa-square-xmark text-rose-600 dark:text-rose-400 text-xl ml-auto shrink-0"></i>';
+                } else {
+                    baseStyle = 'border-slate-200 dark:border-slate-800/60 bg-slate-50/30 dark:bg-slate-900/30 text-slate-400 dark:text-slate-500 opacity-75';
+                    badgeStyle = 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-400';
+                    checkIcon = '<i class="fa-regular fa-square text-slate-300 dark:text-slate-700 text-xl ml-auto shrink-0"></i>';
+                }
             } else {
-                baseStyle = 'border-slate-200 dark:border-slate-800/60 bg-slate-50/30 dark:bg-slate-900/30 text-slate-400 dark:text-slate-500 opacity-75';
+                // Đang chọn (chưa nộp)
+                const isSelected = practiceMultiSelections.has(ans.id);
+                if (isSelected) {
+                    baseStyle = 'border-indigo-600 dark:border-indigo-500 bg-indigo-50/80 dark:bg-indigo-950/50 text-slate-900 dark:text-white font-semibold ring-2 ring-indigo-400/40';
+                    badgeStyle = 'bg-indigo-600 text-white border-indigo-600';
+                    checkIcon = '<i class="fa-solid fa-square-check text-indigo-600 dark:text-indigo-400 text-xl ml-auto shrink-0"></i>';
+                } else {
+                    baseStyle = 'border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-800 hover:border-indigo-500 text-slate-800 dark:text-slate-100';
+                    badgeStyle = 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300';
+                    checkIcon = '<i class="fa-regular fa-square text-slate-400 text-xl ml-auto shrink-0"></i>';
+                }
+                btn.onclick = () => togglePracticeMultiChoice(q, ans);
             }
+
+            btn.className = `answer-option w-full text-left p-3.5 sm:p-4 rounded-xl border-2 flex items-start gap-3.5 transition ${baseStyle}`;
+            btn.innerHTML = `
+                <span class="w-7 h-7 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeStyle}">${letter}</span>
+                <span class="text-sm sm:text-base leading-relaxed flex-1">${ans.content}</span>
+                ${checkIcon}
+            `;
+            answersEl.appendChild(btn);
+        });
+
+        // Nút bấm xác nhận câu trả lời chọn nhiều
+        if (!existingRecord) {
+            const submitBar = document.createElement('div');
+            submitBar.className = 'pt-2 flex items-center justify-end';
+            submitBar.innerHTML = `
+                <button id="btn-submit-practice-multi" onclick="submitPracticeMultiChoice(filteredQuestions[currentIndex])"
+                    ${practiceMultiSelections.size === 0 ? 'disabled' : ''}
+                    class="w-full sm:w-auto px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-circle-check"></i> Xác nhận đáp án (${practiceMultiSelections.size}/${q.correctCount} đã chọn)
+                </button>
+            `;
+            answersEl.appendChild(submitBar);
         }
+    } else {
+        // ==================== CÂU HỎI ĐƠN LỰA CHỌN (SINGLE-CHOICE) ====================
+        answers.forEach((ans, idx) => {
+            const letter = labels[idx] || String(idx + 1);
+            const btn = document.createElement('button');
+            btn.type = 'button';
 
-        btn.className = `answer-option w-full text-left p-3.5 sm:p-4 rounded-xl border-2 flex items-start gap-3.5 ${baseStyle}`;
-        btn.innerHTML = `
-            <span class="w-7 h-7 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeStyle}">${letter}</span>
-            <span class="text-sm sm:text-base leading-relaxed flex-1">${ans.content}</span>
-            ${statusIcon}
-        `;
+            let baseStyle = 'border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-800 hover:border-party-600 text-slate-800 dark:text-slate-100';
+            let badgeStyle = 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300';
+            let statusIcon = '';
 
-        btn.onclick = () => selectPracticeAnswer(q, ans);
-        answersEl.appendChild(btn);
-    });
+            if (existingRecord) {
+                if (ans.is_correct) {
+                    baseStyle = 'border-emerald-500 bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-950 dark:text-emerald-100 font-semibold shadow-sm';
+                    badgeStyle = 'bg-emerald-600 text-white border-emerald-600';
+                    statusIcon = '<i class="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400 text-lg ml-auto shrink-0"></i>';
+                } else if (existingRecord.selectedId === ans.id && !ans.is_correct) {
+                    baseStyle = 'border-rose-500 bg-rose-50/90 dark:bg-rose-950/50 text-rose-950 dark:text-rose-100';
+                    badgeStyle = 'bg-rose-600 text-white border-rose-600';
+                    statusIcon = '<i class="fa-solid fa-circle-xmark text-rose-600 dark:text-rose-400 text-lg ml-auto shrink-0"></i>';
+                } else {
+                    baseStyle = 'border-slate-200 dark:border-slate-800/60 bg-slate-50/30 dark:bg-slate-900/30 text-slate-400 dark:text-slate-500 opacity-75';
+                }
+            }
 
+            btn.className = `answer-option w-full text-left p-3.5 sm:p-4 rounded-xl border-2 flex items-start gap-3.5 transition ${baseStyle}`;
+            btn.innerHTML = `
+                <span class="w-7 h-7 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeStyle}">${letter}</span>
+                <span class="text-sm sm:text-base leading-relaxed flex-1">${ans.content}</span>
+                ${statusIcon}
+            `;
+
+            btn.onclick = () => selectPracticeAnswer(q, ans);
+            answersEl.appendChild(btn);
+        });
+    }
+
+    // Hiển thị phản hồi chi tiết & giải thích
     if (feedbackEl) {
         if (existingRecord) {
-            const correctAns = (q.answersList || []).find(a => a.is_correct);
             feedbackEl.classList.remove('hidden');
-            if (existingRecord.isCorrect) {
-                feedbackEl.className = 'mt-5 p-4 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 text-xs sm:text-sm';
-                feedbackEl.innerHTML = `<div class="font-bold flex items-center gap-2"><i class="fa-solid fa-check-double text-emerald-600"></i> Chính xác! (Chuỗi nhớ liên tiếp: ${existingRecord.streak || 1})</div>
-                    <div class="mt-1">Đáp án đúng: <strong>${correctAns ? correctAns.content : ''}</strong></div>`;
+            if (q.isMultiChoice) {
+                const correctAnswers = (q.answersList || []).filter(a => a.is_correct);
+                if (existingRecord.isCorrect) {
+                    feedbackEl.className = 'mt-5 p-4 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 text-xs sm:text-sm';
+                    feedbackEl.innerHTML = `
+                        <div class="font-bold flex items-center gap-2"><i class="fa-solid fa-check-double text-emerald-600"></i> Chính xác! Bạn đã chọn đúng cả ${q.correctCount} đáp án. (Chuỗi nhớ liên tiếp: ${existingRecord.streak || 1})</div>
+                        <div class="mt-2 space-y-1 font-semibold text-emerald-800 dark:text-emerald-300">
+                            ${correctAnswers.map(a => `<div>✓ ${a.content}</div>`).join('')}
+                        </div>
+                        ${q.explanation ? `<div class="mt-2 text-xs text-slate-600 dark:text-slate-400 italic">${q.explanation}</div>` : ''}
+                    `;
+                } else {
+                    feedbackEl.className = 'mt-5 p-4 rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 text-xs sm:text-sm';
+                    feedbackEl.innerHTML = `
+                        <div class="font-bold flex items-center gap-2"><i class="fa-solid fa-circle-exclamation text-rose-600"></i> Chưa chính xác — Câu hỏi đã được đưa vào giỏ 🔴 Hay sai!</div>
+                        <div class="mt-2 space-y-1 font-semibold text-rose-800 dark:text-rose-300">
+                            Các đáp án đúng gồm:
+                            ${correctAnswers.map(a => `<div>✓ ${a.content}</div>`).join('')}
+                        </div>
+                        ${q.explanation ? `<div class="mt-2 text-xs text-slate-600 dark:text-slate-400 italic">${q.explanation}</div>` : ''}
+                    `;
+                }
             } else {
-                feedbackEl.className = 'mt-5 p-4 rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 text-xs sm:text-sm';
-                feedbackEl.innerHTML = `<div class="font-bold flex items-center gap-2"><i class="fa-solid fa-circle-exclamation text-rose-600"></i> Chưa chính xác — Câu hỏi đã được đưa vào giỏ 🔴 Hay sai!</div>
-                    <div class="mt-1">Đáp án đúng phải là: <strong>${correctAns ? correctAns.content : ''}</strong></div>`;
+                const correctAns = (q.answersList || []).find(a => a.is_correct);
+                if (existingRecord.isCorrect) {
+                    feedbackEl.className = 'mt-5 p-4 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 text-xs sm:text-sm';
+                    feedbackEl.innerHTML = `
+                        <div class="font-bold flex items-center gap-2"><i class="fa-solid fa-check-double text-emerald-600"></i> Chính xác! (Chuỗi nhớ liên tiếp: ${existingRecord.streak || 1})</div>
+                        <div class="mt-1">Đáp án đúng: <strong>${correctAns ? correctAns.content : ''}</strong></div>
+                        ${q.explanation ? `<div class="mt-1.5 text-xs text-slate-600 dark:text-slate-400 italic">${q.explanation}</div>` : ''}
+                    `;
+                } else {
+                    feedbackEl.className = 'mt-5 p-4 rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 text-xs sm:text-sm';
+                    feedbackEl.innerHTML = `
+                        <div class="font-bold flex items-center gap-2"><i class="fa-solid fa-circle-exclamation text-rose-600"></i> Chưa chính xác — Câu hỏi đã được đưa vào giỏ 🔴 Hay sai!</div>
+                        <div class="mt-1">Đáp án đúng phải là: <strong>${correctAns ? correctAns.content : ''}</strong></div>
+                        ${q.explanation ? `<div class="mt-1.5 text-xs text-slate-600 dark:text-slate-400 italic">${q.explanation}</div>` : ''}
+                    `;
+                }
             }
         } else {
             feedbackEl.classList.add('hidden');
@@ -293,6 +404,57 @@ function renderCurrentPracticeQuestion() {
     if (typeof highlightCurrentInPalette === 'function') highlightCurrentInPalette();
 }
 
+function togglePracticeMultiChoice(question, ans) {
+    if (practiceMultiSelections.has(ans.id)) {
+        practiceMultiSelections.delete(ans.id);
+    } else {
+        practiceMultiSelections.add(ans.id);
+    }
+    renderCurrentPracticeQuestion();
+}
+
+function submitPracticeMultiChoice(question) {
+    if (!question || practiceMultiSelections.size === 0) return;
+
+    const correctIds = (question.answersList || []).filter(a => a.is_correct).map(a => a.id);
+    const selectedIds = Array.from(practiceMultiSelections);
+
+    const isCorrect = selectedIds.length === correctIds.length && correctIds.every(id => practiceMultiSelections.has(id));
+
+    const prevRec = userProgress.answered ? userProgress.answered[question.id] : null;
+    const prevStreak = prevRec && prevRec.streak ? prevRec.streak : 0;
+
+    if (!userProgress.answered) userProgress.answered = {};
+    userProgress.answered[question.id] = {
+        selectedIds: selectedIds,
+        selectedId: selectedIds[0] || -1,
+        isCorrect: isCorrect,
+        streak: isCorrect ? Math.min(prevStreak + 1, 5) : 0
+    };
+
+    if (typeof saveProgressToStorage === 'function') saveProgressToStorage();
+    if (typeof updateDashboardStats === 'function') updateDashboardStats();
+    renderCurrentPracticeQuestion();
+    if (typeof renderQuestionPalette === 'function') renderQuestionPalette();
+
+    // Tự động qua câu nếu bật Auto-Advance và trả lời ĐÚNG
+    if (autoAdvance && isCorrect && currentIndex < filteredQuestions.length - 1) {
+        const barWrap = document.getElementById('auto-advance-bar-wrap');
+        const bar = document.getElementById('auto-advance-bar');
+        if (barWrap && bar) {
+            barWrap.classList.remove('hidden');
+            bar.classList.remove('animate-auto-advance');
+            void bar.offsetWidth; // Force reflow
+            bar.classList.add('animate-auto-advance');
+
+            autoAdvanceTimeout = setTimeout(() => {
+                barWrap.classList.add('hidden');
+                nextQuestion();
+            }, 900);
+        }
+    }
+}
+
 function selectPracticeAnswer(question, selectedAns) {
     const hasCorrectFlag = (question.answersList || []).some(a => a.is_correct);
     const isCorrect = hasCorrectFlag ? Boolean(selectedAns.is_correct) : true;
@@ -302,6 +464,7 @@ function selectPracticeAnswer(question, selectedAns) {
     if (!userProgress.answered) userProgress.answered = {};
     userProgress.answered[question.id] = {
         selectedId: selectedAns.id,
+        selectedIds: [selectedAns.id],
         isCorrect: isCorrect,
         streak: isCorrect ? Math.min(prevStreak + 1, 5) : 0
     };
@@ -342,6 +505,7 @@ function rateFlashcard(level) {
     if (!userProgress.answered) userProgress.answered = {};
     userProgress.answered[q.id] = {
         selectedId: correctAns ? correctAns.id : 1,
+        selectedIds: (q.answersList || []).filter(a => a.is_correct).map(a => a.id),
         isCorrect: level > 0,
         streak: level
     };
@@ -361,6 +525,7 @@ function rateFlashcard(level) {
 function prevQuestion() {
     if (currentIndex > 0) {
         currentIndex--;
+        practiceMultiSelections.clear();
         renderCurrentPracticeQuestion();
     }
 }
@@ -368,6 +533,7 @@ function prevQuestion() {
 function nextQuestion() {
     if (currentIndex < filteredQuestions.length - 1) {
         currentIndex++;
+        practiceMultiSelections.clear();
         renderCurrentPracticeQuestion();
     }
 }
@@ -410,16 +576,23 @@ function setupKeyboardShortcuts() {
         } else if (e.key.toLowerCase() === 's') {
             e.preventDefault();
             toggleStarCurrent();
+        } else if (e.key === 'Enter') {
+            const submitMultiBtn = document.getElementById('btn-submit-practice-multi');
+            if (submitMultiBtn && !submitMultiBtn.disabled) {
+                e.preventDefault();
+                submitMultiBtn.click();
+            }
         } else if (studyMode === 'quiz' && ['1', '2', '3', '4', 'a', 'b', 'c', 'd'].includes(e.key.toLowerCase())) {
             const map = { '1': 0, 'a': 0, '2': 1, 'b': 1, '3': 2, 'c': 2, '4': 3, 'd': 3 };
             const idx = map[e.key.toLowerCase()];
-            const optionButtons = document.querySelectorAll('#q-answers button');
+            const optionButtons = document.querySelectorAll('#q-answers button.answer-option');
             if (optionButtons[idx]) optionButtons[idx].click();
         }
     });
 }
 
 if (typeof window !== 'undefined') {
+    window.practiceMultiSelections = practiceMultiSelections;
     window.selectSubtopic = selectSubtopic;
     window.updateSubtopicPillsUI = updateSubtopicPillsUI;
     window.setStudyMode = setStudyMode;
@@ -429,6 +602,8 @@ if (typeof window !== 'undefined') {
     window.toggleShuffleAnswers = toggleShuffleAnswers;
     window.toggleShuffleQuestions = toggleShuffleQuestions;
     window.renderCurrentPracticeQuestion = renderCurrentPracticeQuestion;
+    window.togglePracticeMultiChoice = togglePracticeMultiChoice;
+    window.submitPracticeMultiChoice = submitPracticeMultiChoice;
     window.selectPracticeAnswer = selectPracticeAnswer;
     window.flipFlashcard = flipFlashcard;
     window.rateFlashcard = rateFlashcard;
@@ -437,4 +612,3 @@ if (typeof window !== 'undefined') {
     window.toggleStarCurrent = toggleStarCurrent;
     window.setupKeyboardShortcuts = setupKeyboardShortcuts;
 }
-

@@ -55,13 +55,17 @@ function renderBankList() {
 
         item.innerHTML = `
             <div class="flex items-center justify-between gap-2 mb-2 flex-wrap">
-                <span class="text-xs font-bold text-slate-400">#${idx + 1} (ID: ${q.id})</span>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-bold text-slate-400">#${idx + 1} (ID: ${q.id})</span>
+                    ${q.isMultiChoice ? `<span class="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold border border-indigo-200 dark:border-indigo-800">☑️ Chọn ${q.correctCount} đáp án</span>` : ''}
+                </div>
                 <span class="px-2.5 py-0.5 rounded-md text-xs font-semibold ${q.chapter === 1 ? 'bg-red-50 dark:bg-red-950 text-party-700 dark:text-red-300' : 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300'}">
                     Chương ${q.chapter} • ${subtopicNames[q.subtopic] || ''}
                 </span>
             </div>
             <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mb-3 leading-relaxed">${highlightFn(q.content)}</h4>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${answersHtml}</div>
+            ${q.explanation ? `<div class="mt-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-500 dark:text-slate-400 italic">${q.explanation}</div>` : ''}
         `;
         container.appendChild(item);
     });

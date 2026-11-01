@@ -43,6 +43,7 @@ function startExam() {
 
     examRemainingSeconds = durationMinutes * 60;
     updateExamTimerDisplay();
+
     if (examTimerInterval) clearInterval(examTimerInterval);
     examTimerInterval = setInterval(() => {
         examRemainingSeconds--;
@@ -50,9 +51,9 @@ function startExam() {
         if (examRemainingSeconds <= 0) {
             clearInterval(examTimerInterval);
             if (typeof showToast === 'function') {
-                showToast('Đã hết giờ làm bài! Hệ thống tự động chấm điểm.', 'warning');
+                showToast('Hết thời gian làm bài! Hệ thống tự động nộp bài.', 'warning');
             }
-            finalizeExamGrading();
+            submitExam();
         }
     }, 1000);
 
@@ -86,9 +87,17 @@ function renderExamQuestionsList() {
     const highlightFn = typeof formatQuestionWithHighlights === 'function' ? formatQuestionWithHighlights : (t => t);
 
     examQuestions.forEach((q, qIdx) => {
-        const selectedAnsId = examUserSelections[q.id];
-        const correctAns = (q.answersList || []).find(a => a.is_correct);
-        const isUserCorrect = Boolean(correctAns && selectedAnsId === correctAns.id);
+        let isUserCorrect = false;
+
+        if (q.isMultiChoice) {
+            const correctIds = (q.answersList || []).filter(a => a.is_correct).map(a => a.id);
+            const userIds = Array.isArray(examUserSelections[q.id]) ? examUserSelections[q.id] : [];
+            isUserCorrect = userIds.length === correctIds.length && correctIds.every(id => userIds.includes(id));
+        } else {
+            const selectedAnsId = examUserSelections[q.id];
+            const correctAns = (q.answersList || []).find(a => a.is_correct);
+            isUserCorrect = Boolean(correctAns && selectedAnsId === correctAns.id);
+        }
 
         if (isExamSubmitted) {
             if (examReviewFilter === 'wrong' && isUserCorrect) return;
@@ -105,10 +114,19 @@ function renderExamQuestionsList() {
         let optionsHtml = '';
         (q.answersList || []).forEach((ans, aIdx) => {
             const letter = letters[aIdx] || String(aIdx + 1);
-            const isSelected = selectedAnsId === ans.id;
+            let isSelected = false;
+
+            if (q.isMultiChoice) {
+                const userIds = Array.isArray(examUserSelections[q.id]) ? examUserSelections[q.id] : [];
+                isSelected = userIds.includes(ans.id);
+            } else {
+                isSelected = (examUserSelections[q.id] === ans.id);
+            }
 
             let style = isSelected
-                ? 'border-party-600 bg-red-50/80 dark:bg-red-950/50 text-slate-900 dark:text-white font-semibold'
+                ? (q.isMultiChoice
+                    ? 'border-indigo-600 dark:border-indigo-500 bg-indigo-50/80 dark:bg-indigo-950/50 text-slate-900 dark:text-white font-semibold ring-2 ring-indigo-400/40'
+                    : 'border-party-600 bg-red-50/80 dark:bg-red-950/50 text-slate-900 dark:text-white font-semibold')
                 : 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/50 hover:bg-white text-slate-800 dark:text-slate-200';
 
             let tagHtml = '';
@@ -120,6 +138,10 @@ function renderExamQuestionsList() {
                     style = 'border-rose-500 bg-rose-50 dark:bg-rose-950/60 text-rose-950 dark:text-rose-200 line-through';
                     tagHtml = '<span class="ml-auto px-2 py-0.5 rounded bg-rose-600 text-white text-[11px] font-bold shrink-0">Bạn đã chọn</span>';
                 }
+            } else if (q.isMultiChoice) {
+                tagHtml = isSelected
+                    ? '<i class="fa-solid fa-square-check text-indigo-600 dark:text-indigo-400 text-lg ml-auto shrink-0"></i>'
+                    : '<i class="fa-regular fa-square text-slate-400 text-lg ml-auto shrink-0"></i>';
             }
 
             optionsHtml += `
@@ -134,9 +156,10 @@ function renderExamQuestionsList() {
 
         card.innerHTML = `
             <div class="flex items-center justify-between gap-2 mb-3">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
                     <span class="px-2.5 py-1 rounded-lg bg-slate-900 dark:bg-slate-700 text-white font-bold text-xs">Câu ${qIdx + 1}</span>
                     <span class="text-xs font-semibold text-slate-500">${subtopicNames[q.subtopic] || ''}</span>
+                    ${q.isMultiChoice ? `<span class="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200 dark:border-indigo-800">Chọn ${q.correctCount} đáp án</span>` : ''}
                 </div>
                 ${isExamSubmitted ? (isUserCorrect
                 ? '<span class="text-xs font-bold text-emerald-600"><i class="fa-solid fa-check-circle"></i> Đúng</span>'
@@ -144,6 +167,7 @@ function renderExamQuestionsList() {
             </div>
             <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mb-4 leading-relaxed">${highlightFn(q.content)}</h4>
             <div class="space-y-2.5">${optionsHtml}</div>
+            ${(isExamSubmitted && q.explanation) ? `<div class="mt-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-xs text-slate-600 dark:text-slate-300 italic border border-slate-200 dark:border-slate-700">${q.explanation}</div>` : ''}
         `;
         container.appendChild(card);
     });
@@ -151,7 +175,25 @@ function renderExamQuestionsList() {
 
 function selectExamOption(questionId, answerId) {
     if (isExamSubmitted) return;
-    examUserSelections[questionId] = answerId;
+    const q = examQuestions.find(x => x.id === questionId);
+
+    if (q && q.isMultiChoice) {
+        let current = Array.isArray(examUserSelections[questionId]) ? [...examUserSelections[questionId]] : [];
+        const idx = current.indexOf(answerId);
+        if (idx >= 0) {
+            current.splice(idx, 1);
+        } else {
+            current.push(answerId);
+        }
+        if (current.length > 0) {
+            examUserSelections[questionId] = current;
+        } else {
+            delete examUserSelections[questionId];
+        }
+    } else {
+        examUserSelections[questionId] = answerId;
+    }
+
     updateExamProgressLabel();
     renderExamQuestionsList();
 }
@@ -186,18 +228,35 @@ function finalizeExamGrading() {
     if (!userProgress.answered) userProgress.answered = {};
 
     examQuestions.forEach(q => {
-        const chosenId = examUserSelections[q.id];
-        const correctAns = (q.answersList || []).find(a => a.is_correct);
-        const isCorrect = Boolean(correctAns && chosenId === correctAns.id);
+        let isCorrect = false;
+        const prevStreak = userProgress.answered[q.id]?.streak || 0;
+
+        if (q.isMultiChoice) {
+            const correctIds = (q.answersList || []).filter(a => a.is_correct).map(a => a.id);
+            const userIds = Array.isArray(examUserSelections[q.id]) ? examUserSelections[q.id] : [];
+            isCorrect = userIds.length === correctIds.length && correctIds.every(id => userIds.includes(id));
+
+            userProgress.answered[q.id] = {
+                selectedIds: userIds,
+                selectedId: userIds[0] || -1,
+                isCorrect: isCorrect,
+                streak: isCorrect ? Math.min(prevStreak + 1, 5) : 0
+            };
+        } else {
+            const chosenId = examUserSelections[q.id];
+            const correctAns = (q.answersList || []).find(a => a.is_correct);
+            isCorrect = Boolean(correctAns && chosenId === correctAns.id);
+
+            userProgress.answered[q.id] = {
+                selectedId: chosenId || -1,
+                selectedIds: chosenId ? [chosenId] : [],
+                isCorrect: isCorrect,
+                streak: isCorrect ? Math.min(prevStreak + 1, 5) : 0
+            };
+        }
+
         if (isCorrect) correctCount++;
         else wrongCount++;
-
-        const prevStreak = userProgress.answered[q.id]?.streak || 0;
-        userProgress.answered[q.id] = {
-            selectedId: chosenId || -1,
-            isCorrect: isCorrect,
-            streak: isCorrect ? Math.min(prevStreak + 1, 5) : 0
-        };
     });
 
     if (typeof saveProgressToStorage === 'function') saveProgressToStorage();
@@ -236,7 +295,9 @@ function finalizeExamGrading() {
     }
 
     renderExamQuestionsList();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 }
 
 function setExamReviewFilter(filter) {
@@ -248,23 +309,27 @@ function retestWrongFromExam() {
     cancelExam();
     if (typeof quickFilterByStat === 'function') quickFilterByStat('bucket-wrong');
     if (typeof showToast === 'function') {
-        showToast('Đã lọc toàn bộ các câu vừa làm sai để bạn ôn lại!', 'success');
+        showToast('Đang mở các câu làm sai để bạn luyện tập lại ngay!');
     }
 }
 
 function cancelExam() {
     if (examTimerInterval) clearInterval(examTimerInterval);
-    const activeEl = document.getElementById('exam-active');
-    const setupEl = document.getElementById('exam-setup');
-    if (activeEl) activeEl.classList.add('hidden');
-    if (setupEl) setupEl.classList.remove('hidden');
+    examQuestions = [];
+    examUserSelections = {};
+    isExamSubmitted = false;
+
+    const setupCard = document.getElementById('exam-setup');
+    const activeCard = document.getElementById('exam-active');
+    const resultBanner = document.getElementById('exam-result-banner');
+
+    if (setupCard) setupCard.classList.remove('hidden');
+    if (activeCard) activeCard.classList.add('hidden');
+    if (resultBanner) resultBanner.classList.add('hidden');
 }
 
 if (typeof window !== 'undefined') {
     window.startExam = startExam;
-    window.updateExamTimerDisplay = updateExamTimerDisplay;
-    window.updateExamProgressLabel = updateExamProgressLabel;
-    window.renderExamQuestionsList = renderExamQuestionsList;
     window.selectExamOption = selectExamOption;
     window.submitExam = submitExam;
     window.finalizeExamGrading = finalizeExamGrading;
@@ -272,4 +337,3 @@ if (typeof window !== 'undefined') {
     window.retestWrongFromExam = retestWrongFromExam;
     window.cancelExam = cancelExam;
 }
-
