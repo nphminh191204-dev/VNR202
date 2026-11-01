@@ -2,18 +2,14 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-console.log('--- Testing Subtopics Horizontal Scroll Feature ---');
+console.log('--- Testing Subtopics Horizontal Scroll Feature (Drag & Wheel) ---');
 
 // 1. Verify HTML Structure
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
 const requiredElements = [
     'id="subtopic-pills"',
-    'id="subtopic-scroll-left"',
-    'id="subtopic-scroll-right"',
     'custom-scrollbar',
-    'onclick="scrollSubtopics(-1)"',
-    'onclick="scrollSubtopics(1)"',
     'data-topic="all"',
     'data-topic="t1"',
     'data-topic="t2"',
@@ -110,20 +106,16 @@ const mockWindow = {
 };
 
 const pillsContainer = new MockElement('div', 'subtopic-pills');
-const scrollLeftBtn = new MockElement('button', 'subtopic-scroll-left');
-const scrollRightBtn = new MockElement('button', 'subtopic-scroll-right');
 
 const pillBtns = ['all', 't1', 't2', 't3', 't4', 't5', 't6'].map(t => {
     const btn = new MockElement('button');
     btn.setAttribute('data-topic', t);
-    btn.className = 'topic-pill';
+    btn.className = 'topic-pill shrink-0';
     return btn;
 });
 
 const elementsMap = {
-    'subtopic-pills': pillsContainer,
-    'subtopic-scroll-left': scrollLeftBtn,
-    'subtopic-scroll-right': scrollRightBtn
+    'subtopic-pills': pillsContainer
 };
 
 const mockDocument = {
@@ -166,31 +158,6 @@ vm.runInContext(practiceCode, sandbox);
 sandbox.setupSubtopicScrollInteractions();
 console.log('PASS: setupSubtopicScrollInteractions initialized without errors.');
 
-// Initial state: scrollLeft is 0 -> left button should be hidden, right button should be shown
-sandbox.updateSubtopicScrollButtons();
-if (!scrollLeftBtn.classList.contains('opacity-0') || !scrollLeftBtn.classList.contains('pointer-events-none')) {
-    console.error('FAIL: Left scroll button should be hidden when scrollLeft is 0');
-    process.exit(1);
-}
-if (scrollRightBtn.classList.contains('opacity-0')) {
-    console.error('FAIL: Right scroll button should be visible when scrollLeft < maxScroll');
-    process.exit(1);
-}
-console.log('PASS: Initial button states correct (left hidden, right visible).');
-
-// Test scrollSubtopics(1)
-sandbox.scrollSubtopics(1);
-if (pillsContainer.scrollLeft !== 280) {
-    console.error(`FAIL: Expected scrollLeft to be 280, got ${pillsContainer.scrollLeft}`);
-    process.exit(1);
-}
-sandbox.updateSubtopicScrollButtons();
-if (scrollLeftBtn.classList.contains('opacity-0')) {
-    console.error('FAIL: Left scroll button should now be visible after scrolling right');
-    process.exit(1);
-}
-console.log('PASS: scrollSubtopics(1) scrolled right and enabled left arrow button.');
-
 // Test wheel event
 const wheelEvent = {
     type: 'wheel',
@@ -199,8 +166,8 @@ const wheelEvent = {
     preventDefault: () => {}
 };
 pillsContainer.dispatchEvent(wheelEvent);
-if (pillsContainer.scrollLeft !== 380) {
-    console.error(`FAIL: Expected wheel to increase scrollLeft to 380, got ${pillsContainer.scrollLeft}`);
+if (pillsContainer.scrollLeft !== 100) {
+    console.error(`FAIL: Expected wheel to increase scrollLeft to 100, got ${pillsContainer.scrollLeft}`);
     process.exit(1);
 }
 console.log('PASS: Mouse wheel vertical delta successfully converted to horizontal scroll.');
@@ -219,8 +186,7 @@ const mouseMoveEvent = {
 };
 pillsContainer.dispatchEvent(mouseMoveEvent);
 
-// walk = (100 - 150) * 1.5 = -75. new scrollLeft = 380 - (-75) = 455
-if (pillsContainer.scrollLeft <= 380) {
+if (pillsContainer.scrollLeft <= 100) {
     console.error(`FAIL: Expected drag to increase scrollLeft, got ${pillsContainer.scrollLeft}`);
     process.exit(1);
 }
