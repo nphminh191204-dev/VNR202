@@ -7,6 +7,9 @@ window.addEventListener('DOMContentLoaded', () => {
     if (typeof loadProgressFromStorage === 'function') {
         loadProgressFromStorage();
     }
+    if (typeof setupSubtopicScrollInteractions === 'function') {
+        setupSubtopicScrollInteractions();
+    }
     if (typeof setupKeyboardShortcuts === 'function') {
         setupKeyboardShortcuts();
     }

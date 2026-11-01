@@ -7,6 +7,15 @@ body {
 }
 
 /* Custom Scrollbar */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.dark .custom-scrollbar {
+    scrollbar-color: #475569 transparent;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -79,5 +88,27 @@ body {
 
 .animate-auto-advance {
     animation: shrinkBar 0.85s linear forwards;
+}
+
+/* Horizontal Scroll & Drag-to-Scroll Utilities */
+.cursor-grab {
+    cursor: grab;
+}
+
+.cursor-grabbing,
+.cursor-grabbing * {
+    cursor: grabbing !important;
+}
+
+.scroll-smooth {
+    scroll-behavior: smooth;
+}
+
+.opacity-0 {
+    opacity: 0;
+}
+
+.opacity-100 {
+    opacity: 1;
 }
 

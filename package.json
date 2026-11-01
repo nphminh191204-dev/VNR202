@@ -4,6 +4,7 @@
   "description": "Hệ thống ôn thi & luyện quizz Lịch sử Đảng (VNR202) - Chương 1 & 2",
   "scripts": {
     "build:css": "tailwindcss -i ./css/input.css -o ./css/tailwind.min.css --minify",
+    "test": "node scripts/test-scroll-feature.js",
     "start": "npx serve .",
     "dev": "npx serve ."
   },

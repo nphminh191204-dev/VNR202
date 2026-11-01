@@ -130,44 +130,67 @@
 
             <!-- 6 Historical Sub-Topic Pills (Bám sát Giáo trình) -->
             <div
-                class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative group/subtopics">
                 <div class="flex items-center justify-between mb-2">
                     <span
                         class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                         <i class="fa-solid fa-timeline text-party-600"></i> Lọc nhanh theo 6 Chuyên đề Lịch sử (Giáo
                         trình BGD&ĐT):
                     </span>
-                    <span id="subtopic-active-count"
-                        class="text-xs font-bold text-party-600 dark:text-amber-400"></span>
+                    <div class="flex items-center gap-2">
+                        <span id="subtopic-active-count"
+                            class="text-xs font-bold text-party-600 dark:text-amber-400"></span>
+                        <span class="hidden md:inline-flex items-center gap-1 text-[11px] text-slate-400 italic">
+                            <i class="fa-solid fa-arrows-left-right text-[10px]"></i> Cuộn chuột hoặc kéo ngang
+                        </span>
+                    </div>
                 </div>
-                <div id="subtopic-pills" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                    <button onclick="selectSubtopic('all')" data-topic="all"
-                        class="topic-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-party-600 text-white shadow-sm transition">
-                        Tất cả Ch.1 & 2
+                <div class="relative flex items-center">
+                    <!-- Nút cuộn sang trái -->
+                    <button type="button" onclick="scrollSubtopics(-1)" id="subtopic-scroll-left"
+                        class="absolute -left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/95 dark:bg-slate-800/95 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-party-600 hover:scale-110 active:scale-95 transition-all opacity-0 pointer-events-none"
+                        title="Cuộn sang trái" aria-label="Cuộn sang trái">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
                     </button>
-                    <button onclick="selectSubtopic('t1')" data-topic="t1"
-                        class="topic-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-red-50 transition">
-                        1. Trước 1930 & Thành lập Đảng (Cương lĩnh 2/1930)
-                    </button>
-                    <button onclick="selectSubtopic('t2')" data-topic="t2"
-                        class="topic-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-red-50 transition">
-                        2. Cao trào 1930-1935 (Luận cương & Xô viết Nghệ Tĩnh)
-                    </button>
-                    <button onclick="selectSubtopic('t3')" data-topic="t3"
-                        class="topic-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-red-50 transition">
-                        3. Dân chủ 1936-1939 & Giải phóng dân tộc 1939-1945
-                    </button>
-                    <button onclick="selectSubtopic('t4')" data-topic="t4"
-                        class="topic-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-50 transition">
-                        4. Bảo vệ chính quyền 1945-1946 (Hiệp định Sơ bộ)
-                    </button>
-                    <button onclick="selectSubtopic('t5')" data-topic="t5"
-                        class="topic-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-50 transition">
-                        5. Kháng chiến chống Pháp 1946-1954 (Điện Biên Phủ)
-                    </button>
-                    <button onclick="selectSubtopic('t6')" data-topic="t6"
-                        class="topic-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-50 transition">
-                        6. Xây dựng CNXH ở miền Bắc & Chống Mỹ 1954-1975
+
+                    <!-- Danh sách Pills chuyên đề cuộn ngang -->
+                    <div id="subtopic-pills"
+                        class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-2.5 pt-1 px-1 w-full select-none cursor-grab active:cursor-grabbing scroll-smooth">
+                        <button onclick="selectSubtopic('all')" data-topic="all"
+                            class="topic-pill shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-party-600 text-white shadow-sm transition">
+                            Tất cả Ch.1 & 2
+                        </button>
+                        <button onclick="selectSubtopic('t1')" data-topic="t1"
+                            class="topic-pill shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-slate-700 transition">
+                            1. Trước 1930 & Thành lập Đảng (Cương lĩnh 2/1930)
+                        </button>
+                        <button onclick="selectSubtopic('t2')" data-topic="t2"
+                            class="topic-pill shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-slate-700 transition">
+                            2. Cao trào 1930-1935 (Luận cương & Xô viết Nghệ Tĩnh)
+                        </button>
+                        <button onclick="selectSubtopic('t3')" data-topic="t3"
+                            class="topic-pill shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-slate-700 transition">
+                            3. Dân chủ 1936-1939 & Giải phóng dân tộc 1939-1945
+                        </button>
+                        <button onclick="selectSubtopic('t4')" data-topic="t4"
+                            class="topic-pill shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-slate-700 transition">
+                            4. Bảo vệ chính quyền 1945-1946 (Hiệp định Sơ bộ)
+                        </button>
+                        <button onclick="selectSubtopic('t5')" data-topic="t5"
+                            class="topic-pill shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-slate-700 transition">
+                            5. Kháng chiến chống Pháp 1946-1954 (Điện Biên Phủ)
+                        </button>
+                        <button onclick="selectSubtopic('t6')" data-topic="t6"
+                            class="topic-pill shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-slate-700 transition">
+                            6. Xây dựng CNXH ở miền Bắc & Chống Mỹ 1954-1975
+                        </button>
+                    </div>
+
+                    <!-- Nút cuộn sang phải -->
+                    <button type="button" onclick="scrollSubtopics(1)" id="subtopic-scroll-right"
+                        class="absolute -right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/95 dark:bg-slate-800/95 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-party-600 hover:scale-110 active:scale-95 transition-all"
+                        title="Cuộn sang phải" aria-label="Cuộn sang phải">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
                     </button>
                 </div>
             </div>

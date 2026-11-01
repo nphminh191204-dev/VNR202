@@ -12,14 +12,25 @@ function selectSubtopic(topic) {
 }
 
 function updateSubtopicPillsUI() {
+    let activeBtn = null;
     document.querySelectorAll('#subtopic-pills .topic-pill').forEach(btn => {
         const t = btn.getAttribute('data-topic');
         if (t === currentSubtopic) {
-            btn.className = 'topic-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-party-600 text-white shadow-sm transition';
+            btn.className = 'topic-pill shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-party-600 text-white shadow-sm transition';
+            activeBtn = btn;
         } else {
-            btn.className = 'topic-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-slate-700 transition';
+            btn.className = 'topic-pill shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-slate-700 transition';
         }
     });
+
+    if (activeBtn && typeof activeBtn.scrollIntoView === 'function') {
+        try {
+            activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        } catch (e) {
+            // Fallback for older browsers
+        }
+    }
+    updateSubtopicScrollButtons();
 }
 
 function setStudyMode(mode) {
@@ -556,6 +567,118 @@ function toggleStarCurrent() {
     if (typeof renderQuestionPalette === 'function') renderQuestionPalette();
 }
 
+
+// ==================== SUBTOPIC PILLS SCROLL & DRAG INTERACTIONS ====================
+
+function scrollSubtopics(direction) {
+    const container = document.getElementById('subtopic-pills');
+    if (!container) return;
+    const scrollAmount = 280;
+    container.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+    setTimeout(updateSubtopicScrollButtons, 300);
+}
+
+function updateSubtopicScrollButtons() {
+    const container = document.getElementById('subtopic-pills');
+    const leftBtn = document.getElementById('subtopic-scroll-left');
+    const rightBtn = document.getElementById('subtopic-scroll-right');
+    if (!container || !leftBtn || !rightBtn) return;
+
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    const currentScroll = container.scrollLeft;
+
+    if (currentScroll <= 6) {
+        leftBtn.classList.add('opacity-0', 'pointer-events-none');
+        leftBtn.classList.remove('opacity-100', 'pointer-events-auto');
+    } else {
+        leftBtn.classList.remove('opacity-0', 'pointer-events-none');
+        leftBtn.classList.add('opacity-100', 'pointer-events-auto');
+    }
+
+    if (maxScroll <= 0 || currentScroll >= maxScroll - 6) {
+        rightBtn.classList.add('opacity-0', 'pointer-events-none');
+        rightBtn.classList.remove('opacity-100', 'pointer-events-auto');
+    } else {
+        rightBtn.classList.remove('opacity-0', 'pointer-events-none');
+        rightBtn.classList.add('opacity-100', 'pointer-events-auto');
+    }
+}
+
+function setupSubtopicScrollInteractions() {
+    const container = document.getElementById('subtopic-pills');
+    if (!container) return;
+
+    // 1. Chuyển thao tác lăn chuột dọc (Mouse Wheel Vertical) thành cuộn ngang
+    container.addEventListener('wheel', (e) => {
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+            e.preventDefault();
+            container.scrollLeft += e.deltaY;
+            updateSubtopicScrollButtons();
+        }
+    }, { passive: false });
+
+    // 2. Kéo thả chuột ngang (Mouse Drag-to-Scroll)
+    let isMouseDown = false;
+    let startX = 0;
+    let initialScrollLeft = 0;
+    let hasDragged = false;
+
+    container.addEventListener('mousedown', (e) => {
+        isMouseDown = true;
+        hasDragged = false;
+        startX = e.pageX - container.offsetLeft;
+        initialScrollLeft = container.scrollLeft;
+        container.classList.add('cursor-grabbing');
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (isMouseDown) {
+            isMouseDown = false;
+            container.classList.remove('cursor-grabbing');
+        }
+    });
+
+    container.addEventListener('mouseleave', () => {
+        if (isMouseDown) {
+            isMouseDown = false;
+            container.classList.remove('cursor-grabbing');
+        }
+    });
+
+    container.addEventListener('mousemove', (e) => {
+        if (!isMouseDown) return;
+        e.preventDefault();
+        const currentX = e.pageX - container.offsetLeft;
+        const walk = (currentX - startX) * 1.5;
+        if (Math.abs(walk) > 4) {
+            hasDragged = true;
+        }
+        container.scrollLeft = initialScrollLeft - walk;
+        updateSubtopicScrollButtons();
+    });
+
+    // Ngăn chặn sự kiện click nhầm vào pill khi người dùng vừa thực hiện kéo chuột
+    container.addEventListener('click', (e) => {
+        if (hasDragged) {
+            e.preventDefault();
+            e.stopPropagation();
+            hasDragged = false;
+        }
+    }, true);
+
+    // 3. Lắng nghe sự kiện scroll và resize để cập nhật mũi tên
+    container.addEventListener('scroll', () => {
+        updateSubtopicScrollButtons();
+    }, { passive: true });
+
+    window.addEventListener('resize', () => {
+        updateSubtopicScrollButtons();
+    }, { passive: true });
+
+    // Cập nhật trạng thái nút cuộn ban đầu
+    updateSubtopicScrollButtons();
+}
+
 function setupKeyboardShortcuts() {
     window.addEventListener('keydown', (e) => {
         const practiceEl = document.getElementById('view-practice');
@@ -610,5 +733,8 @@ if (typeof window !== 'undefined') {
     window.prevQuestion = prevQuestion;
     window.nextQuestion = nextQuestion;
     window.toggleStarCurrent = toggleStarCurrent;
+    window.scrollSubtopics = scrollSubtopics;
+    window.updateSubtopicScrollButtons = updateSubtopicScrollButtons;
+    window.setupSubtopicScrollInteractions = setupSubtopicScrollInteractions;
     window.setupKeyboardShortcuts = setupKeyboardShortcuts;
 }
