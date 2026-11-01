@@ -52,6 +52,7 @@ VNR202/
 ├── vercel.json                # Cấu hình tối ưu routing & cache khi deploy Vercel
 ├── package.json               # Cấu hình metadata dự án
 ├── css/
+│   ├── tailwind.min.css       # Tailwind CSS đã được biên dịch tối ưu cho production
 │   └── style.css              # Custom styling (3D flip card, scrollbar, animations)
 ├── data/
 │   ├── vnr202.js              # Ngân hàng câu hỏi gốc (window.VNR202_DATA)
